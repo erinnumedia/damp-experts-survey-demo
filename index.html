@@ -511,6 +511,43 @@
   .maildl .dr:last-child{border-bottom:0}
   .maildl .dk{color:var(--muted);font-weight:600}
   .maildl .dv{font-weight:700;color:var(--slate);text-align:right}
+  /* redesigned email */
+  .mailaccent{height:4px;background:linear-gradient(90deg,var(--teal-deep),var(--teal-bright))}
+  .mailtop .mailtag{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--teal-bright);font-weight:700;margin-top:10px}
+  .maileyebrow{font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--teal-deep);margin:0 0 4px}
+  .mailgreet{font-size:16px;font-weight:700;color:var(--slate);margin:0 0 6px;font-family:'Roboto',sans-serif;letter-spacing:-.01em}
+  .mailintro{font-size:13.5px;color:var(--muted);margin:0;line-height:1.6}
+  .mailverdict{background:var(--teal-wash);border:1px solid #CFEDE8;border-radius:14px;padding:18px;margin:20px 0}
+  .mailverdict .vhead{font-size:17px;font-family:'Roboto',sans-serif;font-weight:700;color:var(--slate);margin:6px 0 9px;letter-spacing:-.01em;line-height:1.3}
+  .mailverdict .vbody{font-size:13px;color:var(--slate);line-height:1.6;margin:0 0 12px}
+  .mailbullets{margin:0;padding:0;list-style:none}
+  .mailbullets li{display:flex;gap:11px;align-items:flex-start;padding:9px 0;border-top:1px solid rgba(63,168,158,.16);font-size:13px}
+  .mailbullets li:first-child{border-top:0}
+  .mailbullets .bdot{flex:0 0 auto;width:9px;height:9px;border-radius:50%;margin-top:5px}
+  .mailbullets .btxt{color:var(--slate);line-height:1.5}
+  .mailbullets .btxt b{font-weight:700}
+  .mailsect{font-size:12px;font-weight:700;color:var(--slate);margin:24px 0 10px;font-family:'Roboto',sans-serif;letter-spacing:.02em;text-transform:uppercase}
+  .mailfind{border:1px solid var(--line);border-radius:12px;overflow:hidden}
+  .mailfind .fr{display:flex;align-items:center;gap:12px;padding:11px 14px;border-bottom:1px solid var(--line)}
+  .mailfind .fr:last-child{border-bottom:0}
+  .mailfind .fno{flex:0 0 auto;width:24px;height:24px;border-radius:50%;color:#fff;font-weight:700;font-size:12px;display:flex;align-items:center;justify-content:center}
+  .mailfind .fmain{flex:1 1 auto;min-width:0}
+  .mailfind .ftype{font-size:13px;font-weight:600;color:var(--slate);line-height:1.3}
+  .mailfind .floc{font-size:11.5px;color:var(--muted)}
+  .mailfind .fstat{flex:0 0 auto;font-size:10.5px;font-weight:700;padding:4px 9px;border-radius:999px;white-space:nowrap}
+  .mailcost{border:1px solid var(--line);border-radius:12px;overflow:hidden;margin:16px 0}
+  .mailcost .cband{background:var(--paper);padding:11px 16px;font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);border-bottom:1px solid var(--line)}
+  .mailcost .cl{display:flex;justify-content:space-between;gap:14px;padding:9px 16px;font-size:12.5px;border-bottom:1px solid var(--line);color:var(--slate)}
+  .mailcost .cl .clv{font-weight:700;white-space:nowrap}
+  .mailcost .ctot{display:flex;justify-content:space-between;align-items:center;padding:13px 16px;background:var(--teal-wash)}
+  .mailcost .ctot .cl2{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--teal-deep)}
+  .mailcost .ctot .cv2{font-size:21px;font-weight:800;color:var(--teal-deep);font-family:'Roboto',sans-serif;letter-spacing:-.01em}
+  .mailbtn{box-shadow:0 8px 20px -8px rgba(63,168,158,.6);font-size:14.5px;letter-spacing:.01em}
+  .mailguar{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin:16px 0 4px}
+  .mailguar span{font-size:11px;font-weight:600;color:var(--teal-deep);background:var(--teal-wash);border:1px solid #CFEDE8;border-radius:999px;padding:5px 11px}
+  .mailfoot{font-size:12px;color:var(--muted);text-align:center;line-height:1.7}
+  .mailfoot .fbrand{font-weight:700;color:var(--slate)}
+  .mailfoot a{color:var(--teal-deep);text-decoration:none;font-weight:600}
 
   .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--slate);color:#fff;padding:13px 20px;border-radius:12px;font-weight:600;font-size:13.5px;opacity:0;pointer-events:none;transition:.3s;z-index:99;box-shadow:var(--shadow)}
   .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
@@ -780,25 +817,37 @@
           <div class="brand" style="justify-content:center">
             <img class="brandlogo" src="data:image/png;base64,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" alt="Damp Experts Group" style="height:34px;width:auto;display:block">
           </div>
+          <div class="mailtag">Building pathology &amp; damp specialists</div>
         </div>
+        <div class="mailaccent"></div>
         <div class="mailbody">
-          <p style="font-size:15px">Dear Mr Harding,</p>
-          <p style="font-size:14px;color:var(--muted)">Thank you for instructing us. Your <strong id="mailType">Timber Survey</strong> at 7 Hamstead Meadow is complete. Here are the inspection details and a quick summary — your full interactive report is one tap away.</p>
+          <p class="maileyebrow">Your survey report is ready</p>
+          <p class="mailgreet">Dear Mr Harding,</p>
+          <p class="mailintro">Thank you for instructing us. Your <strong id="mailType">Timber Survey</strong> at 7 Hamstead Meadow is complete. Below is a summary of what we found and the recommended way forward — your full interactive report, with photos and floor-plan markers, is one tap away.</p>
 
-          <div class="maildl" id="mailDetails"></div>
-
-          <div class="mailhero">
-            <div class="band">Key findings</div>
-            <div style="padding:16px;font-size:13.5px;line-height:1.6">
-              <span id="mailKf"></span>
-            </div>
+          <div class="mailverdict">
+            <p class="maileyebrow">The headline</p>
+            <div class="vhead" id="mailVerdict"></div>
+            <div class="vbody" id="mailKf"></div>
+            <ul class="mailbullets" id="mailBullets"></ul>
           </div>
 
-          <a class="mailbtn" href="#" onclick="go(6);return false;">View your interactive report →</a>
+          <div class="mailsect">What we found</div>
+          <div class="mailfind" id="mailFindings"></div>
 
-          <p style="font-size:12.5px;color:var(--muted);text-align:center">Tap any numbered marker on your floor plan to see the evidence and the recommended fix.</p>
+          <div class="mailsect">Recommended works</div>
+          <div class="mailcost" id="mailCost"></div>
+
+          <a class="mailbtn" href="#" onclick="go(6);return false;">Open your interactive report →</a>
+          <p style="font-size:12.5px;color:var(--muted);text-align:center;margin:10px 0 0">Tap any numbered marker on your floor plan to see the evidence, the diagnosis and the recommended fix.</p>
+
+          <div class="mailguar" id="mailGuar"></div>
+
+          <div class="mailsect">Inspection details</div>
+          <div class="maildl" id="mailDetails"></div>
+
           <div class="divide"></div>
-          <p style="font-size:12.5px;color:var(--muted);text-align:center">Damp Experts Group · 01273 257877 · reports@dampexpertsgroup.co.uk</p>
+          <p class="mailfoot"><span class="fbrand">Damp Experts Group</span><br>01273 257877 · <a href="mailto:reports@dampexpertsgroup.co.uk">reports@dampexpertsgroup.co.uk</a><br>Report prepared by M. Lovett · CSRT, CSSW</p>
         </div>
       </div>
 
@@ -820,6 +869,7 @@ var STATUSWORD={active:'Active',historic:'Historic',inactive:'Inactive',progress
 var surveyType='timber';
 var cur=0;
 var activeArea='Roof Void';
+var activeRoom=0;
 var TIMBER_AREAS=[
   {code:'RV',name:'Roof Void',kind:'defect',center:{x:33,y:27},construction:'Traditional cut roof',access:'Fully accessible'},
   {code:'SF',name:'Ground Floor Sub-floor',kind:'observation',construction:'Suspended timber floor',access:'Limited (hatch only)'}
@@ -1195,7 +1245,7 @@ function timberCapture(){
     }
     h+='</div></div>';
   });
-  h+='<button class="btn ghost sm" onclick="toast(\'New inspection area — pick from standardised list\')">+ Add inspection area</button>';
+  h+='<button class="btn ghost sm" onclick="addInspectionArea()">+ Add inspection area</button>';
   return h;
 }
 
@@ -1206,13 +1256,57 @@ function capBlock(code,title,meta,body,open){
     '<span class="meta">'+meta+' · tap to '+(open?'collapse':'expand')+'</span></div>'+
     '<div class="obsbody'+(open?' open':'')+'">'+body+'</div></div>';
 }
-function setDash(k,v){ var a=DATA.timber.dashboard,i; for(i=0;i<a.length;i++){ if(a[i][0]===k){a[i][1]=v;return;} } }
+function setDash(k,v){ var a=D().dashboard,i; for(i=0;i<a.length;i++){ if(a[i][0]===k){a[i][1]=v;return;} } }
 function setCover(k,v){ DATA[surveyType].cover=DATA[surveyType].cover||{}; DATA[surveyType].cover[k]=v; }
 function setOverview(i,f,v){ PROPERTY_OVERVIEW[i][f]=v; }
 function toggleMethod(cat,idx){ var m=DATA.timber.methodology[cat]; if(m&&m[idx]) m[idx].on=m[idx].on?0:1; }
 function setMethodLimit(v){ DATA.timber.methodology.limitations=v; }
 function removeOverview(i){ PROPERTY_OVERVIEW.splice(i,1); renderCapture(); toast('Property field removed'); }
 function addOverview(){ PROPERTY_OVERVIEW.push({k:'New item',v:'',status:'confirmed'}); renderCapture(); toast('Field added'); }
+function addInspectionArea(){
+  var n=TIMBER_AREAS.length+1;
+  var name='New inspection area '+n;
+  TIMBER_AREAS.push({code:'NA',name:name,kind:'defect',center:{x:50,y:50},construction:'To confirm',access:'To confirm'});
+  activeArea=name;
+  renderCapture();
+  toast('Inspection area added — set construction, accessibility and defects below');
+}
+
+/* ---- Condensation & Mould capture setters ---- */
+function setMeta(k,v){ var d=D(); d.inspectionMeta=d.inspectionMeta||{}; d.inspectionMeta[k]=v; }
+function setPerfContext(v){ var pc=D().propertyContext; if(pc) pc.performanceContext=v; }
+function setCtx(group,i,f,v){ var g=D().propertyContext&&D().propertyContext[group]; if(g&&g[i]) g[i][f]=v; }
+function setRoomField(i,f,v){ var r=D().rooms[i]; if(!r) return; if(f==='extWalls'||f==='temp'||f==='rh'){ var num=parseFloat(v); r[f]=isNaN(num)?v:num; } else { r[f]=v; } }
+function setRisk(el,field,val){ D().risk[field]=val; segPick(el); }
+function setRoomRisk(el,i,field,val){
+  var r=D().rooms[i]; if(!r) return; r[field]=val; segPick(el);
+  if(field==='mould'){ var body=el.closest('.obsbody'), head=body&&body.previousElementSibling, sev=head&&head.querySelector('.sev');
+    if(sev){ sev.innerHTML='<span class="d '+val+'"></span>Mould '+RISKWORD[val]; } }
+}
+function segPick(el){ var seg=el.closest('.seg'); if(seg){ seg.querySelectorAll('button').forEach(function(b){b.classList.remove('on');}); el.classList.add('on'); } }
+function riskSegCap(i,field,cur){
+  return '<div class="seg risk">'+
+    '<button class="low'+(cur==='low'?' on':'')+'" onclick="setRoomRisk(this,'+i+',\''+field+'\',\'low\')">Low</button>'+
+    '<button class="mod'+(cur==='mod'?' on':'')+'" onclick="setRoomRisk(this,'+i+',\''+field+'\',\'mod\')">Moderate</button>'+
+    '<button class="high'+(cur==='high'?' on':'')+'" onclick="setRoomRisk(this,'+i+',\''+field+'\',\'high\')">High</button>'+
+  '</div>';
+}
+function riskSegOverall(field,cur){
+  return '<div class="seg risk">'+
+    '<button class="low'+(cur==='low'?' on':'')+'" onclick="setRisk(this,\''+field+'\',\'low\')">Low</button>'+
+    '<button class="mod'+(cur==='mod'?' on':'')+'" onclick="setRisk(this,\''+field+'\',\'mod\')">Moderate</button>'+
+    '<button class="high'+(cur==='high'?' on':'')+'" onclick="setRisk(this,\''+field+'\',\'high\')">High</button>'+
+  '</div>';
+}
+function addCMRoom(){
+  var d=D(); var n=d.rooms.length+1;
+  d.rooms.push({name:'New room '+n,code:'NR',floor:'Ground',orientation:'—',extWalls:1,temp:18,rh:55,mould:'low',cond:'low',
+    walls:'External',ventBg:['Opening window'],extract:'None',heating:'Radiator',thermal:'Adequate',airCirc:'Adequate',furniture:'None significant',
+    note:'',rec:'None required.'});
+  activeRoom=d.rooms.length-1;
+  renderCapture();
+  toast('Room added — complete its assessment below');
+}
 
 function siteDetailsCap(){
   var c=DATA.timber.cover||{};
@@ -1333,35 +1427,93 @@ function setDefectStatus(n,el){
 
 function cmCapture(){
   var d=D();
-  var h='<div class="miniLbl">Inspection dashboard</div>'+
-    '<div class="card pad" style="margin-bottom:16px"><div class="row3">'+
-      '<div><label class="f">Ext. temperature</label><input class="i" value="9°C"></div>'+
-      '<div><label class="f">Weather</label><input class="i" value="Cold, damp"></div>'+
-      '<div><label class="f">Occupants</label><input class="i" value="4"></div>'+
-    '</div><div class="miniLbl" style="margin-top:14px">Occupancy factors</div><div class="chipset">'+chips([{t:'Laundry dried indoors',on:1},{t:'Bathing without extraction',on:1},{t:'Cooking without extraction',on:1},{t:'Windows kept shut',on:1},{t:'Tumble dryer vented indoors'}])+'</div></div>'+
-    '<div class="miniLbl">Room-by-room assessment</div>';
+  var h=cmSiteDetailsCap()+cmPropertyContextCap()+cmOverallCap();
+  h+='<div class="divide" style="margin:22px 0 8px"></div><div class="miniLbl">Room-by-room assessment</div>';
   d.rooms.forEach(function(r,i){ h+=cmRoomCard(r,i); });
-  h+='<button class="btn ghost sm" onclick="toast(\'New room — pick from standardised list\')">+ Add room</button>';
+  h+='<button class="btn ghost sm" onclick="addCMRoom()">+ Add room</button>';
   return h;
 }
+function cmSiteDetailsCap(){
+  var d=D(), c=d.cover||{}, m=d.inspectionMeta||{};
+  var body='<div class="row3">'+
+      '<div><label class="f">Inspection date</label><input class="i" value="'+dashVal('Inspected')+'" onchange="setDash(\'Inspected\',this.value)"></div>'+
+      '<div><label class="f">Inspection time</label><input class="i" value="'+(c.time||'')+'" onchange="setCover(\'time\',this.value)"></div>'+
+      '<div><label class="f">Occupancy status</label><input class="i" value="'+(c.occupancy||'Occupied')+'" onchange="setCover(\'occupancy\',this.value)"></div>'+
+    '</div>'+
+    '<div class="row3" style="margin-top:12px">'+
+      '<div><label class="f">Weather</label><input class="i" value="'+dashVal('Weather')+'" onchange="setDash(\'Weather\',this.value)"></div>'+
+      '<div><label class="f">External temp</label><input class="i" value="'+dashVal('Ext. temp')+'" onchange="setDash(\'Ext. temp\',this.value)"></div>'+
+      '<div><label class="f">Number of occupants</label><input class="i" value="'+dashVal('Occupants')+'" onchange="setDash(\'Occupants\',this.value)"></div>'+
+    '</div>'+
+    '<div class="row3" style="margin-top:12px">'+
+      '<div><label class="f">Surveyor</label><input class="i" value="M. Lovett · CSRT, CSSW"></div>'+
+      '<div><label class="f">Inspection type</label><input class="i" value="'+(m.type||'Visual · non-invasive')+'" onchange="setMeta(\'type\',this.value)"></div>'+
+      '<div><label class="f">Areas inspected</label><input class="i" value="'+(m.areas||'')+'" onchange="setMeta(\'areas\',this.value)"></div>'+
+    '</div>'+
+    '<div class="miniLbl" style="margin-top:14px">Occupancy factors</div><div class="chipset">'+chips([{t:'Laundry dried indoors',on:1},{t:'Bathing without extraction',on:1},{t:'Cooking without extraction',on:1},{t:'Windows kept shut',on:1},{t:'Tumble dryer vented indoors'}])+'</div>'+
+    '<div class="miniLbl" style="margin-top:14px">Access restrictions / limitations</div>'+
+    '<textarea class="i" rows="2" onchange="setCover(\'access\',this.value)">'+(c.access||'')+'</textarea>';
+  return capBlock('SD','Site &amp; inspection details','Cover page',body,true);
+}
+function cmPropertyContextCap(){
+  var pc=D().propertyContext||{};
+  function grp(label,key){
+    var rows=pc[key]||[];
+    var h='<div class="miniLbl" style="margin-top:14px">'+label+'</div><div class="capgrid">';
+    rows.forEach(function(o,i){
+      h+='<div class="capitem"><div class="capk"><input class="capname" value="'+String(o.k).replace(/"/g,'&quot;')+'" onchange="setCtx(\''+key+'\','+i+',\'k\',this.value)"></div>'+
+        '<input class="i" value="'+String(o.v).replace(/"/g,'&quot;')+'" onchange="setCtx(\''+key+'\','+i+',\'v\',this.value)"></div>';
+    });
+    return h+'</div>';
+  }
+  var body='<div class="hint" style="margin:0 0 4px">Auto-populated from the property record — confirm or amend each value.</div>'+
+    grp('Property description','description')+
+    grp('Thermal characteristics','thermal')+
+    grp('Heating','heating')+
+    grp('Occupancy profile','occupancy')+
+    '<div class="miniLbl" style="margin-top:16px">Building performance context</div>'+
+    '<textarea class="i" rows="4" onchange="setPerfContext(this.value)">'+(pc.performanceContext||'')+'</textarea>';
+  return capBlock('PC','Property context',(pc.description?pc.description.length:0)+' property fields',body,false);
+}
+function cmOverallCap(){
+  var r=D().risk||{};
+  var body='<div class="hint" style="margin:0 0 12px">Your overall assessment for the property — these drive the summary indicators at the top of the report.</div>'+
+    '<div class="row3">'+
+      '<div><div class="miniLbl">Overall condensation risk</div>'+riskSegOverall('condensation',r.condensation)+'</div>'+
+      '<div><div class="miniLbl">Overall mould risk</div>'+riskSegOverall('mould',r.mould)+'</div>'+
+      '<div><div class="miniLbl">Overall building performance</div>'+riskSegOverall('performance',r.performance)+'</div>'+
+    '</div>';
+  return capBlock('OA','Overall assessment','Summary indicators',body,false);
+}
 function cmRoomCard(r,i){
-  var open=i===0;
+  var open=i===activeRoom;
   var extractPresent=r.extract.toLowerCase().indexOf('none')<0 && r.extract.toLowerCase().indexOf('n/a')<0;
   return '<div class="obsblock">'+
-    '<div class="obshead'+(open?' open':'')+'" onclick="toggleObs(this)"><span class="ic">'+r.code+'</span><span class="title">'+r.name+'</span>'+
+    '<div class="obshead'+(open?' open':'')+'" data-room="'+i+'" onclick="toggleObs(this)"><span class="ic">'+r.code+'</span><span class="title">'+r.name+'</span>'+
       '<span class="meta"><span class="sev"><span class="d '+r.mould+'"></span>Mould '+RISKWORD[r.mould]+'</span></span></div>'+
     '<div class="obsbody'+(open?' open':'')+'">'+
-      '<div class="row"><div><label class="f">Air temp (°C)</label><input class="i" value="'+r.temp+'"></div><div><label class="f">Surface RH (%)</label><input class="i" value="'+r.rh+'"></div></div>'+
+      '<div class="row3">'+
+        '<div><label class="f">Floor</label><input class="i" value="'+(r.floor||'')+'" onchange="setRoomField('+i+',\'floor\',this.value)"></div>'+
+        '<div><label class="f">Orientation</label><input class="i" value="'+(r.orientation||'')+'" onchange="setRoomField('+i+',\'orientation\',this.value)"></div>'+
+        '<div><label class="f">External walls</label><input class="i" value="'+r.extWalls+'" onchange="setRoomField('+i+',\'extWalls\',this.value)"></div>'+
+      '</div>'+
+      '<div class="row" style="margin-top:12px"><div><label class="f">Air temp (°C)</label><input class="i" value="'+r.temp+'" onchange="setRoomField('+i+',\'temp\',this.value)"></div><div><label class="f">Surface RH (%)</label><input class="i" value="'+r.rh+'" onchange="setRoomField('+i+',\'rh\',this.value)"></div></div>'+
       '<div class="miniLbl" style="margin-top:12px">External walls</div><div class="chipset">'+chips([{t:r.walls,on:1},{t:'Internal only'}])+'</div>'+
       '<div class="miniLbl">Background ventilation</div><div class="chipset">'+chips(['Opening window','Trickle vents open','Trickle vents closed','Air brick'].map(function(o){return {t:o,on:r.ventBg.indexOf(o)>=0};}))+'</div>'+
       '<div class="miniLbl">Mechanical extraction</div>'+
       '<div class="seg"><button class="'+(extractPresent?'on':'')+'">Present</button><button class="'+(!extractPresent?'on':'')+'">Absent</button></div>'+
       (extractPresent?'<div style="margin-top:10px"><div class="miniLbl">Extraction status</div><div class="chipset">'+chips(['Ducted externally','Recirculating only','Not operating','Undersized'].map(function(o){return {t:o,on:r.extract.toLowerCase().indexOf(o.toLowerCase().split(' ')[0])>=0};}))+'</div></div>':'')+
+      '<div class="row" style="margin-top:12px">'+
+        '<div><label class="f">Heating</label><input class="i" value="'+(r.heating||'').replace(/"/g,'&quot;')+'" onchange="setRoomField('+i+',\'heating\',this.value)"></div>'+
+        '<div><label class="f">Air circulation</label><input class="i" value="'+(r.airCirc||'').replace(/"/g,'&quot;')+'" onchange="setRoomField('+i+',\'airCirc\',this.value)"></div>'+
+      '</div>'+
+      '<div class="miniLbl" style="margin-top:12px">Furniture placement</div><input class="i" value="'+(r.furniture||'').replace(/"/g,'&quot;')+'" onchange="setRoomField('+i+',\'furniture\',this.value)">'+
       '<div class="miniLbl">Thermal deficiencies</div><div class="chipset">'+chips(['Ceiling cold spots','Wall dot-and-dab','Cold reveals','Floor cold bridging','None observed'].map(function(o){return {t:o,on:r.thermal.toLowerCase().indexOf(o.toLowerCase().split(' ')[0])>=0 || (o==='None observed'&&r.thermal==='Adequate')};}))+'</div>'+
       '<div class="row" style="margin-top:6px">'+
-        '<div><div class="miniLbl">Mould risk</div>'+riskSeg(r.mould)+'</div>'+
-        '<div><div class="miniLbl">Condensation risk</div>'+riskSeg(r.cond)+'</div>'+
+        '<div><div class="miniLbl">Mould risk</div>'+riskSegCap(i,'mould',r.mould)+'</div>'+
+        '<div><div class="miniLbl">Condensation risk</div>'+riskSegCap(i,'cond',r.cond)+'</div>'+
       '</div>'+
+      '<div class="miniLbl" style="margin-top:12px">Room-specific recommendation</div><input class="i" value="'+(r.rec||'').replace(/"/g,'&quot;')+'" onchange="setRoomField('+i+',\'rec\',this.value)">'+
       '<div class="miniLbl" style="margin-top:12px">Evidence photo</div>'+roomPhotoBtn(r,i)+
       aiBox('AI building-performance note',r.note)+
     '</div>'+
@@ -1379,13 +1531,6 @@ function removeRoomPhoto(i){
   var r=D().rooms[i];
   if(r){ r.photo=null; renderCapture(); toast('Photo removed'); }
 }
-function riskSeg(cur){
-  return '<div class="seg risk">'+
-    '<button class="low'+(cur==='low'?' on':'')+'">Low</button>'+
-    '<button class="mod'+(cur==='mod'?' on':'')+'">Moderate</button>'+
-    '<button class="high'+(cur==='high'?' on':'')+'">High</button>'+
-  '</div>';
-}
 function aiBox(lab,text){
   return '<div class="aibox"><div class="lab"><svg class="spark" viewBox="0 0 24 24" fill="#1F8385"><path d="M12 2l2.2 5.8L20 10l-5.8 2.2L12 18l-2.2-5.8L4 10l5.8-2.2z"/></svg>'+lab+'</div><div class="aitext">'+text+'</div></div>';
 }
@@ -1393,6 +1538,7 @@ function aiBox(lab,text){
 function toggleObs(head){
   head.classList.toggle('open'); head.nextElementSibling.classList.toggle('open');
   if(head.dataset.area && head.classList.contains('open')) activeArea=head.dataset.area;
+  if(head.dataset.room!==undefined && head.classList.contains('open')) activeRoom=+head.dataset.room;
 }
 document.addEventListener('click',function(e){
   var c=e.target.closest('.chip');
@@ -1534,9 +1680,16 @@ function buildPayload(){
     base.inspection_areas=TIMBER_AREAS.map(function(a){return {name:a.name,construction:a.construction,accessibility:a.access};});
     base.findings=currentFindings().map(function(f){return {marker_no:f.n,area:f.loc,defect_type:f.type,status:f.statusLabel||f.status};});
   }else{
-    base.rooms=d.rooms.map(function(r){return {name:r.name,floor:r.floor,orientation:r.orientation,
+    var pc=d.propertyContext||{};
+    base.inspection.type=(d.inspectionMeta||{}).type||null;
+    base.inspection.areas_inspected=(d.inspectionMeta||{}).areas||null;
+    base.property_context={ description:pc.description, thermal:pc.thermal, heating:pc.heating,
+      occupancy:pc.occupancy, performance_context:pc.performanceContext };
+    base.overall_risk={ condensation:d.risk.condensation, mould:d.risk.mould, building_performance:d.risk.performance };
+    base.rooms=d.rooms.map(function(r){return {name:r.name,floor:r.floor,orientation:r.orientation,external_walls:r.extWalls,
       temperature_c:r.temp,relative_humidity_pct:r.rh,ventilation:r.ventBg.concat([r.extract]),
-      thermal:r.thermal,mould_risk:r.mould,condensation_risk:r.cond};});
+      heating:r.heating,air_circulation:r.airCirc,furniture:r.furniture,thermal:r.thermal,
+      mould_risk:r.mould,condensation_risk:r.cond,room_recommendation:r.rec};});
   }
   return base;
 }
@@ -1549,7 +1702,7 @@ function payloadSummary(){
       p.findings.length+' findings'];
   }else{
     chips=[p.rooms.length+' rooms assessed',
-      'temp + RH per room','ventilation + thermal','mould + condensation risk'];
+      'property context','temp + RH per room','ventilation + thermal','mould + condensation risk','overall risk'];
   }
   var chipHTML=chips.map(function(c){return '<span class="rchip on">✓ '+c+'</span>';}).join('');
   var json=JSON.stringify(p,null,2);
@@ -2101,6 +2254,50 @@ function syncEmail(){
   var d=D();
   document.getElementById('mailType').textContent=d.label;
   document.getElementById('mailKf').innerHTML=d.keyFindings;
+
+  /* Verdict headline — built from the strongest key bullet */
+  var b0=(d.keyBullets&&d.keyBullets[0])||{lead:'',text:''};
+  document.getElementById('mailVerdict').textContent=(b0.lead+' '+b0.text).replace(/\s+/g,' ').trim();
+
+  /* Colour-coded key bullets */
+  var bh='';
+  (d.keyBullets||[]).forEach(function(b){
+    bh+='<li><span class="bdot" style="background:'+(COLORS[b.tone]||COLORS.note)+'"></span>'+
+        '<span class="btxt"><b>'+b.lead+'</b> '+b.text+'</span></li>';
+  });
+  document.getElementById('mailBullets').innerHTML=bh;
+
+  /* Findings at a glance — numbered markers, colour-coded status */
+  var fh='';
+  (d.findings||[]).forEach(function(f){
+    var c=COLORS[f.status]||COLORS.note, word=STATUSWORD[f.status]||f.status;
+    fh+='<div class="fr">'+
+          '<span class="fno" style="background:'+c+'">'+f.n+'</span>'+
+          '<span class="fmain"><span class="ftype">'+f.type+'</span><span class="floc">'+f.loc+'</span></span>'+
+          '<span class="fstat" style="color:'+c+';background:'+c+'1A">'+word+'</span>'+
+        '</div>';
+  });
+  document.getElementById('mailFindings').innerHTML=fh;
+
+  /* Recommended works + total inc VAT */
+  var q=d.quote||[], net=0;
+  var ch='<div class="cband">Recommended works</div>';
+  q.forEach(function(l){ net+=(+l.amount||0);
+    ch+='<div class="cl"><span>'+l.desc+'</span><span class="clv">£'+fmt(l.amount)+'</span></div>';
+  });
+  var feeEl=document.getElementById('feePrice'); net+=feeEl?(+feeEl.value||0):0;
+  var vat=net*0.2, tot=net+vat;
+  ch+='<div class="cl"><span>VAT (20%)</span><span class="clv">£'+fmt2(vat)+'</span></div>';
+  ch+='<div class="ctot"><span class="cl2">Total inc VAT</span><span class="cv2">£'+fmt2(tot)+'</span></div>';
+  document.getElementById('mailCost').innerHTML=ch;
+
+  /* Trust chips — type-aware so we never overstate guarantees */
+  var guar=surveyType==='cm'
+    ? ['12-month workmanship warranty','Fully insured','CSRT · CSSW accredited']
+    : ['25-year damp-proofing guarantee','Fully insured','CSRT · CSSW accredited'];
+  document.getElementById('mailGuar').innerHTML=guar.map(function(g){return '<span>'+g+'</span>';}).join('');
+
+  /* Inspection details */
   var occ=dashVal('Occupancy')||('Occupied · '+dashVal('Occupants')+' occupants');
   var rows=[
     ['Property','7 Hamstead Meadow, Chidham, PO18 8TJ'],
@@ -2112,7 +2309,7 @@ function syncEmail(){
     ['External temperature',dashVal('Ext. temp')],
     ['Occupancy',occ]
   ];
-  var h='<div class="dband">Inspection details</div>';
+  var h='';
   rows.forEach(function(r){ h+='<div class="dr"><span class="dk">'+r[0]+'</span><span class="dv">'+r[1]+'</span></div>'; });
   document.getElementById('mailDetails').innerHTML=h;
   calc();
