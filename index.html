@@ -661,79 +661,30 @@
       <div class="actions"><button class="btn ghost" onclick="go(0)">← Back</button><div class="spacer"></div><button class="btn" onclick="go(2)">Start survey on field app →</button></div>
     </section>
 
-    <!-- ===== 2 · UPLOAD PLAN ===== -->
+    <!-- ===== 2 · STRUCTURED SURVEY INPUT ===== -->
     <section class="screen" data-s="2">
-      <div class="eyebrow">Stage 3 — Site plan</div>
-      <h1 class="h-title">Upload the site plan</h1>
-      <p class="h-sub">The team generates a floor/site plan in their plan app and uploads it here. Findings are then pinned onto this exact image, so the client sees defects in place on their own property.</p>
-
-      <div class="grid g2" style="margin-top:22px">
-        <div class="card pad">
-          <div id="dropZone" class="drop" ondragover="event.preventDefault();this.classList.add('dragover')" ondragleave="this.classList.remove('dragover')" ondrop="event.preventDefault();this.classList.remove('dragover');handlePlanDrop(event)">
-            <div style="font-size:34px;line-height:1">⤒</div>
-            <p style="font-weight:700;color:var(--slate);margin:8px 0 2px">Drag &amp; drop the plan, or</p>
-            <button class="btn sm" onclick="uploadPlan()">Choose file</button>
-            <p class="hint" style="margin-top:12px">PNG, JPG or PDF exported from magicplan · CubiCasa · RoomSketcher</p>
-          </div>
-          <div id="dropFilled" style="display:none">
-            <div style="display:flex;gap:14px;align-items:center">
-              <div id="planThumb" class="thumb" style="display:flex;align-items:center;justify-content:center;font-size:11px;color:#8a949b;text-align:center">PLAN<br>PDF</div>
-              <div style="flex:1">
-                <div id="planName" style="font-weight:700">7-hamstead-meadow_plan.pdf</div>
-                <div id="planMeta" class="hint">1.2 MB · uploaded · converted to image for pinning</div>
-              </div>
-              <span class="tag">✓ Ready</span>
-            </div>
-            <div class="actions"><button class="btn ghost sm" onclick="uploadPlan()">Replace</button><button class="btn ghost sm" onclick="resetPlan()">Remove</button></div>
-          </div>
-        </div>
-        <div class="card pad">
-          <div class="miniLbl">Coming from</div>
-          <div class="switchrow">
-            <span class="surveychip on">magicplan</span><span class="surveychip">CubiCasa</span><span class="surveychip">RoomSketcher</span>
-          </div>
-          <div class="divide"></div>
-          <p class="hint" style="line-height:1.6">magicplan and CubiCasa expose an <strong>API</strong>, so on the live build the plan can auto-import straight into the job — zero manual upload. Any other app (or a hand-drawn plan photographed on site) uses this manual upload path. Either way, the pinning works identically.</p>
-        </div>
-      </div>
-
-      <div class="actions"><button class="btn ghost" onclick="go(1)">← Back</button><div class="spacer"></div><button class="btn" id="toSurvey" onclick="go(3)" disabled style="opacity:.5">Plan needed to continue →</button></div>
-    </section>
-
-    <!-- ===== 3 · STRUCTURED SURVEY INPUT ===== -->
-    <section class="screen" data-s="3">
-      <div class="eyebrow">Stage 4 — On-site survey</div>
+      <div class="eyebrow">Stage 3 — On-site survey</div>
       <h1 class="h-title">Record findings — minimum taps</h1>
-      <p class="h-sub">The surveyor works through the property. Observations are captured as <strong>structured taps</strong>, not typing — record it once and the software writes the report. The capture form adapts to the survey type. Drop a numbered marker on the plan for each finding.</p>
+      <p class="h-sub">The surveyor works through the property. Observations are captured as <strong>structured taps</strong>, not typing — record it once and the software writes the report. The capture form adapts to the survey type.</p>
 
       <div class="typeswitch" id="captureSwitch"></div>
 
-      <div class="grid capstage" style="grid-template-columns:1fr 360px;gap:24px;margin-top:14px;align-items:start">
-        <!-- LEFT: structured capture (type-aware) -->
+      <div style="margin-top:14px">
+        <!-- structured capture (type-aware) -->
         <div id="captureMount"></div>
 
-        <!-- RIGHT: plan + pins (shared) -->
-        <div class="capplan">
-          <div class="miniLbl">Tap the plan to pin a finding &middot; drag a pin to the exact room &amp; wall</div>
-          <div class="planbox drop-target" id="planbox" onclick="planTap(event)">
-            <div id="planLayer"></div>
-            <div id="pins"></div>
-          </div>
-          <div class="hint">Pins use % coordinates, so they map correctly on any screen or the client's device.</div>
-
-          <div class="card pad" style="margin-top:16px">
-            <div class="miniLbl">Findings on this job</div>
-            <div id="findList"></div>
-          </div>
+        <div class="card pad" style="margin-top:16px">
+          <div class="miniLbl">Findings on this job</div>
+          <div id="findList"></div>
         </div>
       </div>
 
-      <div class="actions"><button class="btn ghost" onclick="go(2)">← Back</button><div class="spacer"></div><button class="btn slate" onclick="go(4)">Generate report with AI →</button></div>
+      <div class="actions"><button class="btn ghost" onclick="go(1)">← Back</button><div class="spacer"></div><button class="btn slate" onclick="go(3)">Generate report with AI →</button></div>
     </section>
 
-    <!-- ===== 4 · AI GENERATION ===== -->
-    <section class="screen" data-s="4">
-      <div class="eyebrow">Stage 5 — AI drafting</div>
+    <!-- ===== 3 · AI GENERATION ===== -->
+    <section class="screen" data-s="3">
+      <div class="eyebrow">Stage 4 — AI drafting</div>
       <h1 class="h-title">Building the report</h1>
       <p class="h-sub">Everything the surveyor captured is sent — server-side — to the Claude API, which turns the structured survey into a full report: key findings, professional opinions and a matched schedule of works, written in Damp Experts Group's own voice, learned from hundreds of past reports. The API key never touches the browser.</p>
       <div class="grid" style="grid-template-columns:1fr 1fr;gap:20px;margin-top:8px">
@@ -747,14 +698,14 @@
             <div class="genbar"><i id="genFill"></i></div>
             <div class="genlist" id="genList"></div>
           </div>
-          <button class="btn" id="genBtn" onclick="go(5)" style="margin-top:14px;display:none">Review draft →</button>
+          <button class="btn" id="genBtn" onclick="go(4)" style="margin-top:14px;display:none">Review draft →</button>
         </div>
       </div>
     </section>
 
-    <!-- ===== 5 · REVIEW / PRICE / SEND ===== -->
-    <section class="screen" data-s="5">
-      <div class="eyebrow">Stage 6 — Review &amp; send</div>
+    <!-- ===== 4 · REVIEW / PRICE / SEND ===== -->
+    <section class="screen" data-s="4">
+      <div class="eyebrow">Stage 5 — Review &amp; send</div>
       <h1 class="h-title">Review, price &amp; self-approve</h1>
       <p class="h-sub">The surveyor checks the AI draft, edits any wording, enters the price manually, then approves and sends — no office gate. Everything flows straight into the client's report and email.</p>
 
@@ -784,30 +735,30 @@
           <div class="card pad" style="margin-top:16px">
             <div class="miniLbl">Before you send</div>
             <div class="kv"><span class="k">Report</span><span class="v">✓ Drafted</span></div>
-            <div class="kv"><span class="k">Plan &amp; pins</span><span class="v" id="sendFindCount">✓ 2 findings</span></div>
+            <div class="kv"><span class="k">Findings</span><span class="v" id="sendFindCount">✓ 2 findings</span></div>
             <div class="kv"><span class="k">Price</span><span class="v">✓ Set</span></div>
             <button class="btn" style="width:100%;justify-content:center;margin-top:14px" onclick="approveSend()">✓ Approve &amp; send to client</button>
           </div>
         </div>
       </div>
-      <div class="actions"><button class="btn ghost" onclick="go(3)">← Back to survey</button></div>
+      <div class="actions"><button class="btn ghost" onclick="go(2)">← Back to survey</button></div>
     </section>
 
-    <!-- ===== 6 · CLIENT INTERACTIVE REPORT ===== -->
-    <section class="screen" data-s="6">
+    <!-- ===== 5 · CLIENT INTERACTIVE REPORT ===== -->
+    <section class="screen" data-s="5">
       <div class="eyebrow">Client view — hosted web report</div>
       <h1 class="h-title">The interactive report</h1>
-      <p class="h-sub">What the client opens from their email. Numbered markers on their own plan — tap one to reveal the evidence, the diagnosis and the recommended fix. The whole report structure adapts to the survey type.</p>
+      <p class="h-sub">What the client opens from their email — the evidence, the diagnosis and the recommended fix for each finding. The whole report structure adapts to the survey type.</p>
 
       <div class="typeswitch" id="reportSwitch"></div>
 
       <div id="reportMount" style="margin-top:8px"></div>
 
-      <div class="actions"><button class="btn ghost" onclick="go(5)">← Back to review</button><div class="spacer"></div><button class="btn" onclick="go(7)">See the email the client got →</button></div>
+      <div class="actions"><button class="btn ghost" onclick="go(4)">← Back to review</button><div class="spacer"></div><button class="btn" onclick="go(6)">See the email the client got →</button></div>
     </section>
 
-    <!-- ===== 7 · CLIENT EMAIL ===== -->
-    <section class="screen" data-s="7">
+    <!-- ===== 6 · CLIENT EMAIL ===== -->
+    <section class="screen" data-s="6">
       <div class="eyebrow">Client view — branded email</div>
       <h1 class="h-title">The email that lands</h1>
       <p class="h-sub">Email clients strip interactivity, so the email is a clean branded summary that links to the live interactive report. This is the accepted, reliable pattern.</p>
@@ -823,7 +774,7 @@
         <div class="mailbody">
           <p class="maileyebrow">Your survey report is ready</p>
           <p class="mailgreet">Dear Mr Harding,</p>
-          <p class="mailintro">Thank you for instructing us. Your <strong id="mailType">Timber Survey</strong> at 7 Hamstead Meadow is complete. Below is a summary of what we found and the recommended way forward — your full interactive report, with photos and floor-plan markers, is one tap away.</p>
+          <p class="mailintro">Thank you for instructing us. Your <strong id="mailType">Timber Survey</strong> at 7 Hamstead Meadow is complete. Below is a summary of what we found and the recommended way forward — your full interactive report, with photos and detailed findings, is one tap away.</p>
 
           <div class="mailverdict">
             <p class="maileyebrow">The headline</p>
@@ -838,8 +789,8 @@
           <div class="mailsect">Recommended works</div>
           <div class="mailcost" id="mailCost"></div>
 
-          <a class="mailbtn" href="#" onclick="go(6);return false;">Open your interactive report →</a>
-          <p style="font-size:12.5px;color:var(--muted);text-align:center;margin:10px 0 0">Tap any numbered marker on your floor plan to see the evidence, the diagnosis and the recommended fix.</p>
+          <a class="mailbtn" href="#" onclick="go(5);return false;">Open your interactive report →</a>
+          <p style="font-size:12.5px;color:var(--muted);text-align:center;margin:10px 0 0">Tap any finding to see the evidence, the diagnosis and the recommended fix.</p>
 
           <div class="mailguar" id="mailGuar"></div>
 
@@ -851,7 +802,7 @@
         </div>
       </div>
 
-      <div class="actions" style="justify-content:center"><button class="btn ghost" onclick="go(6)">← Open the report</button><button class="btn" onclick="go(0)">↻ Restart walk-through</button></div>
+      <div class="actions" style="justify-content:center"><button class="btn ghost" onclick="go(5)">← Open the report</button><button class="btn" onclick="go(0)">↻ Restart walk-through</button></div>
     </section>
 
   </main>
@@ -1097,9 +1048,8 @@ function fmt(n){return n.toLocaleString('en-GB',{minimumFractionDigits:0});}
 function fmt2(n){return n.toLocaleString('en-GB',{minimumFractionDigits:2,maximumFractionDigits:2});}
 function chips(arr){return arr.map(function(c){return '<span class="chip'+(c.on?' on':'')+'">'+c.t+'</span>';}).join('');}
 /* ==================================================================
-   IMAGE UPLOAD — reusable (site plan + evidence photos)
+   IMAGE UPLOAD — reusable (evidence photos)
    ================================================================== */
-var PLAN_IMG=null;
 function pickImage(cb){
   var inp=document.createElement('input');
   inp.type='file'; inp.accept='image/*,application/pdf';
@@ -1112,20 +1062,12 @@ function readImage(file,cb){
   r.onload=function(){ cb(r.result,file); };
   r.readAsDataURL(file);
 }
-function planSVG(){
-  if(PLAN_IMG) return '<img class="planimg" src="'+PLAN_IMG+'" alt="Uploaded site plan">';
-  var d=D().plan, r='';
-  d.rooms.forEach(function(rm){ r+='<rect x="'+rm.x+'" y="'+rm.y+'" width="'+rm.w+'" height="'+rm.h+'"/>'; });
-  var labels='';
-  d.rooms.forEach(function(rm){ labels+='<text x="'+(rm.x+14)+'" y="'+(rm.y+30)+'">'+rm.t+'</text>'; });
-  return '<svg class="planimg" viewBox="0 0 380 300" xmlns="http://www.w3.org/2000/svg"><rect width="380" height="300" fill="#F3F6F6"/><g stroke="#C4CFD0" stroke-width="2" fill="#fff">'+r+'</g><g fill="#9AA6A7" font-family="DM Sans" font-size="10">'+labels+'</g></svg>';
-}
 
 /* ==================================================================
    RAIL + NAV
    ================================================================== */
 var rail=[
-  ['Booking','Website / office'],['CRM job','Client & appointment'],['Upload plan','From plan app'],
+  ['Booking','Website / office'],['CRM job','Client & appointment'],
   ['On-site survey','Structured capture'],['AI drafting','Report generated'],['Review & send','Price · self-approve'],
   ['Client report','Interactive'],['Client email','Branded summary']
 ];
@@ -1143,11 +1085,11 @@ function go(i){
     var k=+st.dataset.i; st.classList.toggle('active',k===i); st.classList.toggle('done',k<i);
   });
   window.scrollTo({top:0,behavior:'smooth'});
-  if(i===3){buildTypeSwitch('captureSwitch',renderCapture);renderCapture();}
-  if(i===4){renderGenList();runGen();}
-  if(i===5){buildDrafts();document.getElementById('kfEdit').value=D().keyFindingsPlain;renderQuoteLines();calc();syncCounts();}
-  if(i===6){buildTypeSwitch('reportSwitch',renderReport);renderReport();}
-  if(i===7){syncEmail();}
+  if(i===2){buildTypeSwitch('captureSwitch',renderCapture);renderCapture();}
+  if(i===3){renderGenList();runGen();}
+  if(i===4){buildDrafts();document.getElementById('kfEdit').value=D().keyFindingsPlain;renderQuoteLines();calc();syncCounts();}
+  if(i===5){buildTypeSwitch('reportSwitch',renderReport);renderReport();}
+  if(i===6){syncEmail();}
 }
 
 /* ==================================================================
@@ -1176,44 +1118,10 @@ function switchType(t,mountId){
 }
 
 /* ==================================================================
-   PLAN UPLOAD
-   ================================================================== */
-function handlePlanDrop(e){
-  var f=e.dataTransfer&&e.dataTransfer.files&&e.dataTransfer.files[0];
-  if(f) uploadPlan(f); else uploadPlan();
-}
-function uploadPlan(file){
-  var apply=function(dataUrl,f){
-    if(dataUrl) PLAN_IMG=dataUrl;
-    var thumb=document.getElementById('planThumb');
-    if(dataUrl){ thumb.innerHTML='<img src="'+dataUrl+'" style="width:100%;height:100%;object-fit:cover;border-radius:7px" alt="plan">'; }
-    else { PLAN_IMG=null; thumb.innerHTML='PLAN<br>PDF'; }
-    document.getElementById('planName').textContent=(f&&f.name)||'site-plan.png';
-    document.getElementById('planMeta').textContent=(f?((f.size/1048576).toFixed(1)+' MB · '):'')+(dataUrl?'uploaded · ready to pin':'PDF · rasterised server-side for pinning');
-    document.getElementById('dropZone').style.display='none';
-    document.getElementById('dropFilled').style.display='block';
-    var b=document.getElementById('toSurvey');b.disabled=false;b.style.opacity=1;b.textContent='Continue to survey →';
-    var pl=document.getElementById('planLayer'); if(pl) pl.innerHTML=planSVG();
-    toast('Plan uploaded · ready to pin findings');
-  };
-  if(file&&file.name){ readImage(file,apply); } else { pickImage(apply); }
-}
-function resetPlan(){
-  PLAN_IMG=null;
-  var thumb=document.getElementById('planThumb'); if(thumb) thumb.innerHTML='PLAN<br>PDF';
-  document.getElementById('dropZone').style.display='block';
-  document.getElementById('dropFilled').style.display='none';
-  var b=document.getElementById('toSurvey');b.disabled=true;b.style.opacity=.5;b.textContent='Plan needed to continue →';
-  var pl=document.getElementById('planLayer'); if(pl) pl.innerHTML=planSVG();
-}
-
-/* ==================================================================
    STRUCTURED CAPTURE (type-aware)
    ================================================================== */
 function renderCapture(){
-  document.getElementById('planLayer').innerHTML=planSVG();
   document.getElementById('captureMount').innerHTML = surveyType==='timber' ? timberCapture() : cmCapture();
-  drawPins('pins',false);
   renderFindList();
 }
 
@@ -1235,8 +1143,7 @@ function timberCapture(){
     if(a.kind==='defect'){
       if(mine.length){ mine.forEach(function(f){ h+=defCard(f); }); }
       else{ h+='<div class="taphint">No defects recorded yet in this area.</div>'; }
-      h+='<button class="btn ghost sm adddef" onclick="addDefect(\''+a.name+'\')">+ Add defect to '+a.name+'</button>'+
-         '<div class="taphint">…or tap the plan on the right to drop a pin in this area, then classify it here.</div>';
+      h+='<button class="btn ghost sm adddef" onclick="addDefect(\''+a.name+'\')">+ Add defect to '+a.name+'</button>';
     }else{
       mine.forEach(function(f){
         h+='<div class="miniLbl">Observation</div><div class="chipset">'+chips([{t:'Ventilation appears restricted',on:1},{t:'Standing water'},{t:'Debris to void'},{t:'Blocked air bricks'}])+'</div>'+
@@ -1421,7 +1328,7 @@ function setDefectStatus(n,el){
   if(f){
     f.statusLabel=el.textContent; f.status=statusKeyFromLabel(f.statusLabel);
     var card=document.getElementById('def'+n); if(card){var pn=card.querySelector('.pinnum'); if(pn) pn.style.background=COLORS[f.status];}
-    drawPins('pins',false); renderFindList();
+    renderFindList();
   }
 }
 
@@ -1548,113 +1455,24 @@ document.addEventListener('click',function(e){
 });
 
 /* ==================================================================
-   PINS + FINDINGS LIST
+   FINDINGS LIST
    ================================================================== */
-/* Spread overlapping pins apart so multiple findings in one room stay readable.
-   Works in % space; minX/minY are the minimum separation (pin footprint). */
-function layoutPins(list){
-  var minX=10.5, minY=15;
-  var pts=list.map(function(f){return {f:f,x:f.x,y:f.y};});
-  for(var iter=0;iter<80;iter++){
-    var moved=false;
-    for(var i=0;i<pts.length;i++){
-      for(var j=i+1;j<pts.length;j++){
-        var dx=pts[j].x-pts[i].x, dy=pts[j].y-pts[i].y;
-        if(dx===0&&dy===0){dx=(j-i)*0.4;dy=-0.4;}
-        var nx=dx/minX, ny=dy/minY, dist=Math.sqrt(nx*nx+ny*ny);
-        if(dist<1){
-          var push=(1-dist)/2, ux=nx/(dist||1), uy=ny/(dist||1);
-          pts[i].x-=ux*push*minX; pts[i].y-=uy*push*minY;
-          pts[j].x+=ux*push*minX; pts[j].y+=uy*push*minY;
-          moved=true;
-        }
-      }
-    }
-    if(!moved) break;
-  }
-  pts.forEach(function(p){p.x=Math.max(5,Math.min(95,p.x));p.y=Math.max(9,Math.min(96,p.y));});
-  return pts;
-}
-function highlightPin(target,n,on){
-  var box=document.getElementById(target); if(!box) return;
-  box.querySelectorAll('.pin').forEach(function(p){
-    if(!on){p.classList.remove('hi','dim');return;}
-    var isN=+p.dataset.n===n;
-    p.classList.toggle('hi',isN);
-    p.classList.toggle('dim',!isN);
-  });
-}
-function drawPins(target,report){
-  var box=document.getElementById(target); if(!box) return; box.innerHTML='';
-  layoutPins(currentFindings()).forEach(function(p){
-    var f=p.f, col=COLORS[f.status];
-    var d=document.createElement('div');
-    d.className='pin';d.dataset.n=f.n;d.style.left=p.x+'%';d.style.top=p.y+'%';
-    d.innerHTML='<svg width="30" height="38" viewBox="0 0 30 38"><path d="M15 0C6.7 0 0 6.7 0 15c0 10 15 23 15 23s15-13 15-23C30 6.7 23.3 0 15 0z" fill="'+col+'"/></svg><b>'+f.n+'</b>';
-    d.onmouseenter=function(){highlightPin(target,f.n,true);};
-    d.onmouseleave=function(){highlightPin(target,0,false);};
-    if(report){d.onclick=function(ev){ev.stopPropagation();toggleFinding(f.n,true);};}
-    else{enablePinDrag(d,f);}
-    box.appendChild(d);
-  });
-}
-var _pinDragging=false;
-function enablePinDrag(pin,f){
-  pin.classList.add('draggable');
-  function start(ev){
-    ev.preventDefault(); ev.stopPropagation();
-    var plan=document.getElementById('planbox'); if(!plan) return;
-    _pinDragging=true; pin.classList.add('dragging'); pin.classList.add('hi');
-    function move(mv){
-      var pt=mv.touches?mv.touches[0]:mv;
-      var r=plan.getBoundingClientRect();
-      var x=Math.max(0,Math.min(100,Math.round((pt.clientX-r.left)/r.width*100)));
-      var y=Math.max(0,Math.min(100,Math.round((pt.clientY-r.top)/r.height*100)));
-      f.x=x; f.y=y; pin.style.left=x+'%'; pin.style.top=y+'%';
-    }
-    function end(){
-      document.removeEventListener('mousemove',move); document.removeEventListener('mouseup',end);
-      document.removeEventListener('touchmove',move); document.removeEventListener('touchend',end);
-      pin.classList.remove('dragging'); pin.classList.remove('hi');
-      toast('Pin '+f.n+' moved to '+f.x+'% · '+f.y+'%');
-      renderFindList();
-      setTimeout(function(){_pinDragging=false;},0);
-    }
-    document.addEventListener('mousemove',move); document.addEventListener('mouseup',end);
-    document.addEventListener('touchmove',move,{passive:false}); document.addEventListener('touchend',end);
-  }
-  pin.addEventListener('mousedown',start);
-  pin.addEventListener('touchstart',start,{passive:false});
-}
-function planTap(e){
-  if(_pinDragging) return;
-  var r=e.currentTarget.getBoundingClientRect();
-  var x=Math.round((e.clientX-r.left)/r.width*100);
-  var y=Math.round((e.clientY-r.top)/r.height*100);
-  if(surveyType==='timber'){
-    var f=insertFinding(activeArea,x,y);
-    renderCapture();
-    toast('Pin '+f.n+' dropped in '+activeArea+' at '+x+'% · '+y+'% — classify it in the panel');
-  }else{
-    toast('Pin dropped at '+x+'% , '+y+'% — attach to a room');
-  }
-}
 function renderFindList(){
   var h='';
   currentFindings().forEach(function(f){
-    h+='<div class="kv linkrow" onmouseenter="highlightPin(\'pins\','+f.n+',true)" onmouseleave="highlightPin(\'pins\',0,false)"><span class="k"><span class="sev"><span class="d '+f.status+'"></span>'+f.n+' · '+f.loc+'</span></span>'+
+    h+='<div class="kv linkrow"><span class="k"><span class="sev"><span class="d '+f.status+'"></span>'+f.n+' · '+f.loc+'</span></span>'+
       '<span class="v" style="font-weight:600;color:var(--muted);max-width:130px;text-align:right;font-size:12px">'+f.type+'</span>'+
-      '<button class="qx sm" title="Delete pin '+f.n+'" onclick="removeFinding('+f.n+')">×</button></div>';
+      '<button class="qx sm" title="Delete finding '+f.n+'" onclick="removeFinding('+f.n+')">×</button></div>';
   });
-  if(!currentFindings().length) h='<div class="taphint" style="margin-top:6px">No findings yet — tap the plan to drop a pin.</div>';
+  if(!currentFindings().length) h='<div class="taphint" style="margin-top:6px">No findings recorded yet.</div>';
   document.getElementById('findList').innerHTML=h;
 }
-/* Delete a pin / finding (works for both survey types) */
+/* Delete a finding (works for both survey types) */
 function removeFinding(n){
   var arr=currentFindings(), i=arr.map(function(f){return f.n;}).indexOf(n);
   if(i>=0) arr.splice(i,1);
   renumber(); renderCapture();
-  toast('Pin '+n+' deleted');
+  toast('Finding '+n+' deleted');
 }
 
 /* ==================================================================
@@ -1800,7 +1618,7 @@ function reportHeader(title){
     '<div class="hstatuspill"><span style="width:8px;height:8px;border-radius:50%;background:var(--teal-bright);display:inline-block"></span>Approved &amp; issued</div>'+
     '<div class="heyebrow">◆ Damp Experts Group · '+title+'</div>'+
     '<h1>7 Hamstead Meadow, Chidham</h1>'+
-    '<div class="hsub">A complete, evidence-based assessment of your property. Every finding is located on your own floor plan, explained in plain English, with a clear recommended course of action — reviewed and approved by your surveyor.</div>'+
+    '<div class="hsub">A complete, evidence-based assessment of your property. Every finding is explained in plain English, with a clear recommended course of action — reviewed and approved by your surveyor.</div>'+
     '<div class="hstats">'+st+'</div>'+
     '<div class="hactions">'+
       '<a class="hbtn primary" href="#'+findSec+'" onclick="return jumpSec(event,\''+findSec+'\')">Explore the findings →</a>'+
@@ -1980,9 +1798,6 @@ function cmRoomReport(r){
   if(r.rec && r.rec!=='None required.'){ h+='<div class="miniLbl">Room-specific recommendation</div><p class="ranote" style="margin-bottom:0">'+r.rec+'</p>'; }
   return h+'</div>';
 }
-function planPanel(){
-  return '<div class="miniLbl">Inspection map — tap a marker</div><div class="planbox" id="reportPlan">'+planSVG()+'<div id="reportPins"></div></div><div class="hint">Tap a numbered marker to jump to that finding below.</div>';
-}
 function findingsList(rowLabel){
   return '<div class="miniLbl">'+rowLabel+'</div><div id="reportFindRows"></div>';
 }
@@ -2108,7 +1923,6 @@ function renderReport(){
   var html = surveyType==='timber' ? timberReport() : cmReport();
   document.getElementById('reportMount').innerHTML = siteHeader()+html;
   assignSectionIds();
-  drawPins('reportPins',true);
   renderReportRows();
   calc();
   initSigPad();
@@ -2128,11 +1942,8 @@ function timberReport(){
     '<div class="rsection">'+sechd('6','Inspection coverage')+'<div class="hint" style="margin:-8px 0 12px">What we were able to inspect, and where access was limited on the day.</div>'+coverageHTML()+'</div>'+
     '<div class="rsection">'+sechd('7','Inspection &amp; findings')+
       '<div class="hint" style="margin:-8px 0 12px">Organised by area of your property \u2014 each shows what we inspected and anything we found there.</div>'+
-      '<div class="findsec">'+
-        '<div class="findplan">'+planPanel()+
-          '<div class="miniLbl" style="margin-top:18px">Inspection summary</div><div class="flagwrap">'+flags+'</div></div>'+
-        '<div class="findaccwrap">'+findingsList('Findings — tap any to expand')+'</div>'+
-      '</div></div>'+
+      '<div class="miniLbl">Inspection summary</div><div class="flagwrap">'+flags+'</div>'+
+      '<div style="margin-top:18px">'+findingsList('Findings — tap any to expand')+'</div></div>'+
     '<div class="rsection">'+sechd('8','Recommended schedule of works')+'<div class="hint" style="margin:-8px 0 12px">The works we recommend to resolve or prevent the issues found, with a quote to accept.</div>'+scheduleHTML(d.schedule)+acceptQuote()+'</div>'+
     siteFooter()+
   '</div>';
@@ -2177,11 +1988,8 @@ function cmReport(){
       '<div class="kf">'+d.keyFindingsPlain+'</div>'+
       '<div class="miniLbl" style="margin-top:16px">Recommended next steps</div><div class="nextsteps">'+steps+'</div></div>'+
     '<div class="rsection">'+sechd('3','Property context')+'<div class="hint" style="margin:-8px 0 8px">The details of your property relevant to condensation and mould.</div>'+context+'</div>'+
-    '<div class="rsection">'+sechd('4','Room assessments')+'<div class="hint" style="margin:-8px 0 12px">Our findings room by room \u2014 tap a marker on the plan to locate each one.</div>'+
-      '<div class="findsec">'+
-        '<div class="findplan">'+planPanel()+'</div>'+
-        '<div class="findaccwrap"><div class="miniLbl" style="margin-top:0">Findings — tap any to expand</div><div id="reportFindRows"></div></div>'+
-      '</div>'+
+    '<div class="rsection">'+sechd('4','Room assessments')+'<div class="hint" style="margin:-8px 0 12px">Our findings room by room \u2014 tap any to expand the detail.</div>'+
+      '<div class="miniLbl" style="margin-top:0">Findings — tap any to expand</div><div id="reportFindRows"></div>'+
       '<div class="roomlist">'+roomcards+'</div></div>'+
     '<div class="rsection">'+sechd('5','Building performance assessment')+'<div class="hint" style="margin:-8px 0 12px">How your property manages moisture as a whole \u2014 the overall diagnosis behind the findings above.</div><div class="perfgrid">'+perf+'</div></div>'+
     '<div style="padding:24px 26px"><div class="sechd"><span class="snum">6</span><span class="stt">Recommendations</span></div><div class="hint" style="margin:-8px 0 12px">The recommended works, grouped by type and linked to the rooms they address.</div>'+recs+acceptQuote()+'</div>'+
@@ -2208,7 +2016,7 @@ function findRow(f,grouped){
   var sig=f.significance?(f.significance==='None'?' · No structural significance':' · '+f.significance+' significance'):'';
   var sub=grouped?(STATUSWORD[f.status]+sig):f.type;
   return '<div class="facc" id="facc'+f.n+'">'+
-    '<div class="facchd" onclick="toggleFinding('+f.n+')" onmouseenter="highlightPin(\'reportPins\','+f.n+',true)" onmouseleave="highlightPin(\'reportPins\',0,false)">'+
+    '<div class="facchd" onclick="toggleFinding('+f.n+')">'+
       '<div class="n" style="background:'+COLORS[f.status]+'">'+f.n+'</div>'+
       '<div class="facctitle"><div class="ft">'+top+'</div><div class="fsub">'+sub+'</div></div>'+
       '<span class="chev" aria-hidden="true">'+ICON.chev+'</span>'+
