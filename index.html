@@ -877,6 +877,17 @@ var TIMBER_AREAS=[
 var TIMBER_TYPES=['Common Furniture Beetle (Woodworm)','Deathwatch Beetle','House Longhorn','Wet Rot','Dry Rot','Structural timber defect'];
 var TIMBER_STATUS=['Active','Historic','Inactive','Progressive','Suspected','Unable to confirm'];
 
+/* ---- Damp Investigation Survey (client doc: Damp Investigation Survey Report) ---- */
+var DAMP_AREAS=[
+  {code:'FE',name:'Front Elevation — Internal',kind:'defect',center:{x:30,y:70},construction:'Solid 9" brick, plastered',access:'Fully accessible'},
+  {code:'SE',name:'Side Elevation — Internal',kind:'defect',center:{x:72,y:44},construction:'Solid 9" brick, plastered',access:'Fully accessible'},
+  {code:'EX',name:'External Envelope',kind:'observation',construction:'Solid brick, slate roof',access:'Ground level only'}
+];
+var DAMP_TYPES=['Rising damp','Penetrating damp','Condensation-related damp','Bridged DPC','Defective DPC','Plumbing leak / escape of water','Salt contamination','Lateral damp'];
+var DAMP_STATUS=['Active','Historic','Progressive','Suspected','Unable to confirm'];
+/* §5 External Observations — standardised headings, identical on every report (client doc) */
+var DAMP_EXTERNAL_HEADINGS=['Roof','Chimneys','Rainwater Goods','Walls','Openings (Windows &amp; Doors)','Damp Proof Course','Ground Levels','Ventilation','Drainage','External Joinery','Other'];
+
 /* Auto-populated from the property address, surveyor confirms/amends (client doc §3) */
 var PROPERTY_OVERVIEW=[
   {k:'Property type',v:'Semi-detached house',status:'confirmed'},
@@ -1085,6 +1096,111 @@ var DATA={
       {cat:'Further investigation',items:[{title:'Thermal imaging survey (optional)',purpose:'Confirm the full extent of cold bridging before committing to thermal works.',scope:['Carry out a thermographic survey of external walls in cold conditions.'],linked:'— whole property'}]}
     ],
     genList:['Reading structured room-by-room data','Matching against condensation &amp; mould reference library','Assessing building-performance balance','Writing plain-English Key Findings','Drafting professional opinions per room','Grouping recommendations by category','Applying branding, guarantees &amp; T&amp;Cs']
+  },
+
+  damp:{
+    label:'Damp Investigation Survey', ref:'REF-3007', net:6480,
+    quote:[
+      {desc:'Chemical DPC injection & re-plastering — front elevation (8.4 lin.m)',amount:3950},
+      {desc:'Renew defective rainwater goods — side elevation',amount:1180},
+      {desc:'Reduce external ground levels & form drainage channel',amount:1350}
+    ],
+    keyFindings:'<strong>Rising damp</strong> was confirmed to the front elevation, where the original damp proof course has been bridged by raised external ground levels. Separately, <strong>penetrating damp</strong> to the side elevation is being driven by defective rainwater goods. Both are <strong>active</strong> and progressive, but each has a clear and permanent remedy.',
+    keyFindingsPlain:'Rising damp was confirmed to the front elevation internal wall, caused by raised external ground levels bridging the original damp proof course. Penetrating damp to the side elevation is being driven by defective rainwater goods discharging against the wall. Both defects are active and will worsen if left untreated, but both have straightforward and permanent remedies. No dry rot was identified.',
+    keyBullets:[
+      {tone:'high',lead:'Rising damp confirmed',text:'to the front elevation — classic tide mark with salt banding at 900mm.'},
+      {tone:'high',lead:'DPC bridged',text:'by external ground levels raised approximately 180mm above the original course.'},
+      {tone:'high',lead:'Penetrating damp',text:'to the side elevation from defective and overflowing rainwater goods.'},
+      {tone:'mod',lead:'Salt contamination',text:'present in the affected plaster — replastering required after treatment.'},
+      {tone:'low',lead:'No dry rot',text:'identified; timbers adjacent to the affected walls remain sound.'}
+    ],
+    cover:{time:'11:00','occupancy':'Occupied',access:'Fitted units to the kitchen prevented inspection of the rear wall base. Floor coverings not lifted.'},
+    methodology:{
+      type:[{t:'Visual inspection',on:1},{t:'Non-invasive',on:1},{t:'Partially invasive',on:1},{t:'Invasive (with consent)'}],
+      areas:[{t:'External',on:1},{t:'Internal',on:1},{t:'Roof void',on:1},{t:'Sub-floor',on:1},{t:'Basement'},{t:'Outbuildings'}],
+      techniques:[{t:'Visual assessment',on:1},{t:'Electronic moisture profiling',on:1},{t:'Hygrometer',on:1},{t:'Salts assessment',on:1},{t:'Surface temperature measurements',on:1},{t:'Timber moisture testing',on:1},{t:'Borescope inspection'},{t:'Thermal imaging'},{t:'Drone inspection'}],
+      limitations:'Fitted kitchen units prevented inspection to the base of the rear wall. Floor coverings were not lifted. High-level areas to the side elevation were viewed from ground level only.'
+    },
+    dashboard:[['Inspected','28 Jul 2026'],['Weather','Light rain'],['Ext. temp','12°C'],['Occupancy','Occupied']],
+    /* §5 External Observations — standardised headings, every report identical */
+    external:[
+      {k:'Roof',v:'Natural slate, generally sound. No slipped or missing slates observed from ground level.',tone:'low'},
+      {k:'Chimneys',v:'Single stack to the party wall. Flaunching weathered but intact; no evidence of damp penetration internally.',tone:'low'},
+      {k:'Rainwater Goods',v:'Cast iron gutter to the side elevation is fractured at the joint and overflowing directly against the wall face. Downpipe discharges to an open gully.',tone:'high'},
+      {k:'Walls',v:'Solid 9" brickwork. Pointing eroded to the side elevation at low level. Staining and moss growth consistent with persistent saturation.',tone:'high'},
+      {k:'Openings (Windows &amp; Doors)',v:'uPVC double glazing throughout. Sealant sound; no evidence of water ingress around reveals.',tone:'low'},
+      {k:'Damp Proof Course',v:'Original slate DPC visible to the side elevation at two courses above ground. Bridged to the front elevation by raised ground levels.',tone:'high'},
+      {k:'Ground Levels',v:'Front path and border raised approximately 180mm above the original DPC line, bridging it across the full frontage.',tone:'high'},
+      {k:'Ventilation',v:'Sub-floor air bricks present to the front elevation; two partially obstructed by the raised border.',tone:'mod'},
+      {k:'Drainage',v:'Surface water gully to the side elevation partially blocked with silt and leaf debris. Standing water observed during inspection.',tone:'mod'},
+      {k:'External Joinery',v:'Timber fascia and soffit to the side elevation showing paint breakdown and surface softening below the defective gutter.',tone:'mod'},
+      {k:'Other',v:'No outbuildings or basement to this property. No evidence of previous damp proofing works.',tone:'low'}
+    ],
+    coverage:[
+      {element:'Front Elevation — Internal',status:'inspected'},
+      {element:'Side Elevation — Internal',status:'inspected'},
+      {element:'External Envelope',status:'inspected'},
+      {element:'Sub-floor Void',status:'partial'},
+      {element:'Rear Wall (Kitchen)',status:'not'},
+      {element:'Roof Void',status:'inspected'}
+    ],
+    areas:[
+      {name:'Front Elevation — Internal',construction:'Solid 9" brick external wall, gypsum plaster finish, skirting to suspended timber floor.',accessibility:'Fully accessible',restrictions:'Furniture moved by occupier prior to inspection.'},
+      {name:'Side Elevation — Internal',construction:'Solid 9" brick external wall, gypsum plaster finish. Chimney breast to party wall.',accessibility:'Fully accessible',restrictions:'None.'},
+      {name:'External Envelope',construction:'Solid brick elevations, slate roof, cast iron rainwater goods, slate DPC.',accessibility:'Ground level only',restrictions:'High-level areas viewed from ground level only.'}
+    ],
+    plan:{ rooms:[
+      {x:24,y:24,w:150,h:120,t:'Lounge (Front)'},{x:174,y:24,w:182,h:120,t:'Dining Room'},
+      {x:24,y:144,w:120,h:132,t:'Hall'},{x:144,y:144,w:120,h:132,t:'Kitchen'},{x:264,y:144,w:92,h:132,t:'WC'}
+    ]},
+    findings:[
+      {n:1,loc:'Front Elevation — Internal',type:'Rising damp',status:'active',x:30,y:70,
+       elements:['Front external wall (lounge)','Skirting','Plaster to 1.0m'],significance:'Moderate',
+       evidence:['Classic tide mark to plaster at approximately 900mm above floor level','Protimeter readings 28–34% WME at skirting, falling to 12% at 1.2m','Hygroscopic salt banding (nitrates and chlorides) confirmed at the tide line','External ground level measured 180mm above the original slate DPC'],
+       moisture:'28–34% WME at skirting level, reducing to 12% WME at 1.2m — classic rising profile.',
+       opinion:'Active rising damp to the front elevation internal wall. The moisture profile is textbook — highest at skirting level and reducing steadily with height, terminating in a defined tide mark at approximately 900mm with associated hygroscopic salt banding. The original slate damp proof course remains in place but has been bridged externally by a raised path and planted border sitting approximately 180mm above the course. Groundwater is therefore tracking around the DPC and rising through the wall by capillary action.',
+       factors:['External ground levels raised above the original DPC','Clay subsoil retaining moisture against the wall base','Partially obstructed sub-floor air bricks reducing evaporation'],
+       cause:'Bridged damp proof course caused by raised external ground levels.',
+       fix:'Reduce external ground levels to a minimum of 150mm below the DPC and form a drainage channel. Install a chemical DPC to the affected run and replaster with a salt-retardant render system.'},
+      {n:2,loc:'Side Elevation — Internal',type:'Penetrating damp',status:'active',x:72,y:44,
+       elements:['Side external wall (dining room)','Plaster at mid-height'],significance:'Moderate',
+       evidence:['Localised damp patch at mid-height, unrelated to floor level','Protimeter readings 26% WME at the patch centre, 11% WME surrounding','No salt banding present — consistent with penetrating rather than rising damp','Externally coincident with a fractured cast iron gutter joint'],
+       moisture:'26% WME at patch centre, 11% WME surrounding — localised, no rising profile.',
+       opinion:'Active penetrating damp to the side elevation. The affected area sits at mid-height with no connection to floor level and shows no salt banding, which rules out rising damp. Externally the position corresponds exactly with a fractured cast iron gutter joint that is discharging directly onto the wall face. The solid brickwork has eroded pointing at this location, allowing saturation to track through to the internal finish.',
+       factors:['Fractured cast iron gutter joint discharging against the wall','Eroded pointing to the side elevation at low and mid level','Persistent saturation preventing the wall from drying between rainfall events'],
+       cause:'Defective rainwater goods saturating solid brickwork with eroded pointing.',
+       fix:'Renew the defective rainwater goods and repoint the affected area of brickwork. Allow the wall to dry, then make good internal finishes. No chemical treatment required.'},
+      {n:3,loc:'External Envelope',status:'note',type:'Blocked drainage & obstructed air bricks',x:34,y:88,
+       elements:['Surface water gully','Sub-floor air bricks'],significance:'None',
+       evidence:['Surface water gully partially blocked with silt and leaf debris','Standing water observed adjacent to the wall base during inspection','Two sub-floor air bricks partially obstructed by the raised border'],
+       moisture:'Sub-floor void RH 76% — elevated relative to the living space.',
+       opinion:'The surface water gully to the side elevation is partially blocked, causing water to stand against the wall base rather than discharging. Two sub-floor air bricks to the front elevation are partially obstructed by the raised border. Neither is causing damage in its own right, but both reduce the ability of the structure to dry and will undermine the remedial works if left unaddressed.',
+       factors:['Silt and leaf debris in the surface water gully','Raised border obstructing sub-floor ventilation'],
+       cause:'Lack of routine maintenance to drainage and ventilation provisions.',
+       fix:'Clear the gully and reinstate free discharge. Clear obstructions to all sub-floor air bricks as part of the ground level reduction works.'}
+    ],
+    summary:[
+      {k:'Rising damp',v:'Confirmed · active',tone:'high'},
+      {k:'Penetrating damp',v:'Confirmed · active',tone:'high'},
+      {k:'Damp proof course',v:'Bridged externally',tone:'high'},
+      {k:'Salt contamination',v:'Present · front elevation',tone:'mod'},
+      {k:'Dry rot',v:'None found',tone:'low'}
+    ],
+    schedule:[
+      {title:'Reduce external ground levels & form drainage channel',
+       purpose:'Expose the original damp proof course so it can function as designed, and prevent groundwater tracking around it.',
+       scope:['Excavate the raised path and border to a minimum of 150mm below the DPC line.','Form a free-draining channel to the base of the wall.','Clear obstructions to all sub-floor air bricks.','Clear the surface water gully and confirm free discharge.'],
+       linked:'① Front Elevation · ③ External Envelope'},
+      {title:'Chemical DPC installation & re-plastering',
+       purpose:'Provide a permanent barrier against rising moisture and remove salt-contaminated plaster that would otherwise remain hygroscopic.',
+       scope:['Install a chemical damp proof course by injection to the affected run (8.4 linear metres).','Hack off contaminated plaster to 1.2m or 300mm above the highest evidence of damp.','Re-plaster using a salt-retardant render system.','Reinstate skirting once the wall has dried.'],
+       linked:'① Front Elevation · rising damp'},
+      {title:'Renew rainwater goods & repoint affected brickwork',
+       purpose:'Stop the source of saturation so the side elevation can dry and the penetrating damp resolves permanently.',
+       scope:['Remove the fractured cast iron gutter and downpipe to the side elevation.','Install new rainwater goods and confirm discharge to the gully.','Rake out and repoint eroded mortar joints to the affected area.','Allow the wall to dry, then make good internal finishes.'],
+       linked:'② Side Elevation · penetrating damp'}
+    ],
+    genList:['Reading structured survey data','Matching against damp diagnosis reference library','Cross-checking moisture profiles &amp; salts analysis','Writing plain-English Key Findings','Drafting professional opinions per defect','Assembling Schedule of Works from recommendation library','Applying branding, guarantees &amp; T&amp;Cs']
   }
 };
 
@@ -1096,6 +1212,9 @@ function currentFindings(){return D().findings;}
 function fmt(n){return n.toLocaleString('en-GB',{minimumFractionDigits:0});}
 function fmt2(n){return n.toLocaleString('en-GB',{minimumFractionDigits:2,maximumFractionDigits:2});}
 function chips(arr){return arr.map(function(c){return '<span class="chip'+(c.on?' on':'')+'">'+c.t+'</span>';}).join('');}
+/* Mount app-authored markup. All arguments are built from the DATA
+   templates above, never from untrusted input. */
+function setHTML(id,html){ var el=document.getElementById(id); if(el) el.innerHTML=html; }
 /* ==================================================================
    IMAGE UPLOAD — reusable (site plan + evidence photos)
    ================================================================== */
@@ -1154,8 +1273,20 @@ function go(i){
    TYPE HANDLING
    ================================================================== */
 function bookingType(){ setType(document.getElementById('bkType').value); }
+/* Area / defect-type registries per survey type — keeps the pin+classify
+   flow identical across timber and damp, which are both marker-driven. */
+function AREAS(){ return surveyType==='damp' ? DAMP_AREAS : TIMBER_AREAS; }
+function DEFECT_TYPES(){ return surveyType==='damp' ? DAMP_TYPES : TIMBER_TYPES; }
+function DEFECT_STATUS(){ return surveyType==='damp' ? DAMP_STATUS : TIMBER_STATUS; }
+/* Marker-driven types capture findings by area; cm captures room-by-room. */
+function isMarkerDriven(){ return surveyType==='timber' || surveyType==='damp'; }
+
 function setType(t){
   surveyType=t;
+  if(isMarkerDriven()){
+    var as=AREAS(), names=as.map(function(a){return a.name;});
+    if(names.indexOf(activeArea)<0) activeArea=as[0].name;
+  }
   document.getElementById('crmType').textContent=D().label;
   document.getElementById('crmRef').textContent=D().ref;
   document.getElementById('crmRef2').textContent=D().ref;
@@ -1165,7 +1296,8 @@ function buildTypeSwitch(mountId,after){
   var m=document.getElementById(mountId);
   m.innerHTML=
     '<button data-t="timber" onclick="switchType(\'timber\','+"'"+mountId+"'"+')">Timber Survey</button>'+
-    '<button data-t="cm" onclick="switchType(\'cm\','+"'"+mountId+"'"+')">Condensation &amp; Mould</button>';
+    '<button data-t="cm" onclick="switchType(\'cm\','+"'"+mountId+"'"+')">Condensation &amp; Mould</button>'+
+    '<button data-t="damp" onclick="switchType(\'damp\','+"'"+mountId+"'"+')">Damp Investigation</button>';
   m.querySelectorAll('button').forEach(function(b){b.classList.toggle('on',b.dataset.t===surveyType);});
 }
 function switchType(t,mountId){
@@ -1212,15 +1344,34 @@ function resetPlan(){
    ================================================================== */
 function renderCapture(){
   document.getElementById('planLayer').innerHTML=planSVG();
-  document.getElementById('captureMount').innerHTML = surveyType==='timber' ? timberCapture() : cmCapture();
+  var capHTML =
+    surveyType==='timber' ? timberCapture() :
+    surveyType==='damp'   ? dampCapture()   : cmCapture();
+  setHTML('captureMount', capHTML);
   drawPins('pins',false);
   renderFindList();
 }
 
 function timberCapture(){
-  var h=siteDetailsCap()+overviewCap()+methodologyCap();
+  return markerCapture({
+    none:'No defects recorded yet in this area.',
+    obsChips:[{t:'Ventilation appears restricted',on:1},{t:'Standing water'},{t:'Debris to void'},{t:'Blocked air bricks'}]
+  });
+}
+/* Damp adds §5 External Observations between methodology and the areas —
+   standardised headings, identical on every report (client doc §5). */
+function dampCapture(){
+  return markerCapture({
+    none:'No damp defects recorded yet in this area.',
+    obsChips:[{t:'Blocked gully',on:1},{t:'Obstructed air bricks',on:1},{t:'Standing water'},{t:'Eroded pointing'},{t:'High ground levels'}],
+    extra:externalCap()
+  });
+}
+/* Shared capture flow for the marker-driven survey types (timber + damp). */
+function markerCapture(opts){
+  var h=siteDetailsCap()+overviewCap()+methodologyCap()+(opts.extra||'');
   h+='<div class="divide" style="margin:22px 0 8px"></div><div class="miniLbl">Inspection areas — structured capture</div>';
-  TIMBER_AREAS.forEach(function(a){
+  AREAS().forEach(function(a){
     var mine=currentFindings().filter(function(f){return f.loc===a.name;});
     var open=a.name===activeArea;
     var metaTxt=a.kind==='defect'
@@ -1234,12 +1385,12 @@ function timberCapture(){
         '<div class="divide"></div>';
     if(a.kind==='defect'){
       if(mine.length){ mine.forEach(function(f){ h+=defCard(f); }); }
-      else{ h+='<div class="taphint">No defects recorded yet in this area.</div>'; }
+      else{ h+='<div class="taphint">'+opts.none+'</div>'; }
       h+='<button class="btn ghost sm adddef" onclick="addDefect(\''+a.name+'\')">+ Add defect to '+a.name+'</button>'+
          '<div class="taphint">…or tap the plan on the right to drop a pin in this area, then classify it here.</div>';
     }else{
       mine.forEach(function(f){
-        h+='<div class="miniLbl">Observation</div><div class="chipset">'+chips([{t:'Ventilation appears restricted',on:1},{t:'Standing water'},{t:'Debris to void'},{t:'Blocked air bricks'}])+'</div>'+
+        h+='<div class="miniLbl">Observation</div><div class="chipset">'+chips(opts.obsChips)+'</div>'+
            aiBox('AI note',f.opinion);
       });
     }
@@ -1259,14 +1410,14 @@ function capBlock(code,title,meta,body,open){
 function setDash(k,v){ var a=D().dashboard,i; for(i=0;i<a.length;i++){ if(a[i][0]===k){a[i][1]=v;return;} } }
 function setCover(k,v){ DATA[surveyType].cover=DATA[surveyType].cover||{}; DATA[surveyType].cover[k]=v; }
 function setOverview(i,f,v){ PROPERTY_OVERVIEW[i][f]=v; }
-function toggleMethod(cat,idx){ var m=DATA.timber.methodology[cat]; if(m&&m[idx]) m[idx].on=m[idx].on?0:1; }
-function setMethodLimit(v){ DATA.timber.methodology.limitations=v; }
+function toggleMethod(cat,idx){ var m=D().methodology[cat]; if(m&&m[idx]) m[idx].on=m[idx].on?0:1; }
+function setMethodLimit(v){ D().methodology.limitations=v; }
 function removeOverview(i){ PROPERTY_OVERVIEW.splice(i,1); renderCapture(); toast('Property field removed'); }
 function addOverview(){ PROPERTY_OVERVIEW.push({k:'New item',v:'',status:'confirmed'}); renderCapture(); toast('Field added'); }
 function addInspectionArea(){
-  var n=TIMBER_AREAS.length+1;
+  var n=AREAS().length+1;
   var name='New inspection area '+n;
-  TIMBER_AREAS.push({code:'NA',name:name,kind:'defect',center:{x:50,y:50},construction:'To confirm',access:'To confirm'});
+  AREAS().push({code:'NA',name:name,kind:'defect',center:{x:50,y:50},construction:'To confirm',access:'To confirm'});
   activeArea=name;
   renderCapture();
   toast('Inspection area added — set construction, accessibility and defects below');
@@ -1309,7 +1460,7 @@ function addCMRoom(){
 }
 
 function siteDetailsCap(){
-  var c=DATA.timber.cover||{};
+  var c=D().cover||{};
   var body='<div class="row3">'+
       '<div><label class="f">Inspection date</label><input class="i" value="'+dashVal('Inspected')+'" onchange="setDash(\'Inspected\',this.value)"></div>'+
       '<div><label class="f">Inspection time</label><input class="i" value="'+(c.time||'')+'" onchange="setCover(\'time\',this.value)"></div>'+
@@ -1335,17 +1486,50 @@ function overviewCap(){
   return capBlock('PO','Property overview',PROPERTY_OVERVIEW.length+' items',body+'</div><button class="btn ghost sm" style="margin-top:12px" onclick="addOverview()">+ Add item</button>',false);
 }
 function methodologyCap(){
-  var m=DATA.timber.methodology;
+  var m=D().methodology;
   function grp(label,cat){ return '<div class="miniLbl">'+label+'</div><div class="chipset">'+m[cat].map(function(it,idx){return '<span class="chip'+(it.on?' on':'')+'" onclick="toggleMethod(\''+cat+'\','+idx+')">'+it.t+'</span>';}).join('')+'</div>'; }
   var body=grp('Inspection type','type')+grp('Areas inspected','areas')+grp('Techniques used','techniques')+
     '<div class="miniLbl">Access limitations</div><textarea class="i" rows="3" onchange="setMethodLimit(this.value)">'+m.limitations+'</textarea>';
   return capBlock('IM','Inspection methodology','Type · areas · techniques',body,false);
 }
+/* §5 External Observations — the same eleven headings on every damp report,
+   so nothing gets missed and reports stay comparable (client doc §5). */
+function externalCap(){
+  var ex=D().external||[], body='';
+  ex.forEach(function(o,i){
+    body+='<div class="miniLbl">'+o.k+'</div>'+
+      '<div class="chipset single">'+
+        ['low','mod','high'].map(function(t){
+          return '<span class="chip'+(o.tone===t?' on':'')+'" onclick="setExternalTone('+i+',\''+t+'\',this)">'+RISKWORD[t]+'</span>';
+        }).join('')+
+      '</div>'+
+      '<textarea class="i" rows="2" onchange="setExternalNote('+i+',this.value)">'+o.v.replace(/&amp;/g,'&')+'</textarea>';
+  });
+  return capBlock('EO','External observations',ex.length+' standardised headings',body,false);
+}
+function setExternalTone(i,t,el){ var o=D().external[i]; if(o){ o.tone=t; segPick(el); } }
+function setExternalNote(i,v){ var o=D().external[i]; if(o) o.v=v; }
+/* Per-type chip vocabulary for the defect card. */
+var CAPTURE_VOCAB={
+  timber:{
+    elementsLabel:'Timber elements affected',
+    elements:[{t:'Common rafters'},{t:'Purlins'},{t:'Wall plates'},{t:'Ceiling joists'},{t:'Ridge board'}],
+    evidence:[{t:'Flight holes present'},{t:'No fresh frass'},{t:'Fresh frass / bore dust'},{t:'Tunnelling'},{t:'Timber softening'},{t:'Surface staining'}],
+    factors:[{t:'Historic moisture, resolved'},{t:'Ongoing moisture'},{t:'Poor ventilation'},{t:'Embedded timbers'}]
+  },
+  damp:{
+    elementsLabel:'Building elements affected',
+    elements:[{t:'External wall'},{t:'Internal plaster'},{t:'Skirting'},{t:'Chimney breast'},{t:'Floor / sub-floor'}],
+    evidence:[{t:'Tide mark present'},{t:'Salt banding'},{t:'Elevated WME at skirting'},{t:'Localised patch, no rising profile'},{t:'Surface staining'},{t:'Blown / hollow plaster'}],
+    factors:[{t:'Bridged DPC'},{t:'Raised ground levels'},{t:'Defective rainwater goods'},{t:'Eroded pointing'},{t:'Blocked drainage'},{t:'Plumbing leak'}]
+  }
+};
 function defCard(f){
   var col=COLORS[f.status];
+  var CAP=CAPTURE_VOCAB[surveyType]||CAPTURE_VOCAB.timber;
   var statusLabel=f.statusLabel||defaultStatusLabel(f.status);
-  var typeChips=TIMBER_TYPES.map(function(t){return '<span class="chip'+(t===f.type?' on':'')+'" onclick="setDefectType('+f.n+',this)">'+t+'</span>';}).join('');
-  var statusChips=TIMBER_STATUS.map(function(s){return '<span class="chip'+(s===statusLabel?' on':'')+'" onclick="setDefectStatus('+f.n+',this)">'+s+'</span>';}).join('');
+  var typeChips=DEFECT_TYPES().map(function(t){return '<span class="chip'+(t===f.type?' on':'')+'" onclick="setDefectType('+f.n+',this)">'+t+'</span>';}).join('');
+  var statusChips=DEFECT_STATUS().map(function(s){return '<span class="chip'+(s===statusLabel?' on':'')+'" onclick="setDefectStatus('+f.n+',this)">'+s+'</span>';}).join('');
   return '<div class="defcard" id="def'+f.n+'">'+
     '<div class="defhd"><span class="pinnum" style="background:'+col+'">'+f.n+'</span>'+
       '<span class="deftitle">Defect '+f.n+' — <em id="deftt'+f.n+'">'+f.type+'</em></span>'+
@@ -1353,9 +1537,9 @@ function defCard(f){
     '<div class="miniLbl">Defect type</div><div class="chipset single">'+typeChips+'</div>'+
     '<div class="miniLbl">Status</div><div class="chipset single">'+statusChips+'</div>'+
     '<div class="miniLbl">Extent</div><div class="chipset">'+chips([{t:'Localised'},{t:'Widespread'}])+'</div>'+
-    '<div class="miniLbl">Timber elements affected</div><div class="chipset">'+chips([{t:'Common rafters'},{t:'Purlins'},{t:'Wall plates'},{t:'Ceiling joists'},{t:'Ridge board'}])+'</div>'+
-    '<div class="miniLbl">Evidence (observations only)</div><div class="chipset">'+chips([{t:'Flight holes present'},{t:'No fresh frass'},{t:'Fresh frass / bore dust'},{t:'Tunnelling'},{t:'Timber softening'},{t:'Surface staining'}])+'</div>'+
-    '<div class="miniLbl">Contributing factors</div><div class="chipset">'+chips([{t:'Historic moisture, resolved'},{t:'Ongoing moisture'},{t:'Poor ventilation'},{t:'Embedded timbers'}])+'</div>'+
+    '<div class="miniLbl">'+CAP.elementsLabel+'</div><div class="chipset">'+chips(CAP.elements)+'</div>'+
+    '<div class="miniLbl">Evidence (observations only)</div><div class="chipset">'+chips(CAP.evidence)+'</div>'+
+    '<div class="miniLbl">Contributing factors</div><div class="chipset">'+chips(CAP.factors)+'</div>'+
     '<div class="row" style="margin-top:6px">'+
       '<div><div class="miniLbl">Structural significance</div><div class="seg"><button class="on">None</button><button>Minor</button><button>Moderate</button><button>Sig.</button></div></div>'+
       '<div><div class="miniLbl">Evidence photo</div>'+photoBtn(f)+'</div>'+
@@ -1384,7 +1568,7 @@ function statusKeyFromLabel(l){
 function renumber(){ currentFindings().forEach(function(f,i){f.n=i+1;}); }
 function insertFinding(area,x,y){
   var arr=currentFindings();
-  var f={loc:area,type:'Common Furniture Beetle (Woodworm)',status:'active',statusLabel:'Active',x:x,y:y,
+  var f={loc:area,type:DEFECT_TYPES()[0],status:'active',statusLabel:'Active',x:x,y:y,
     opinion:'Awaiting classification — choose the defect type, status and evidence above and the professional opinion will be drafted here.',
     cause:'—',fix:'—'};
   var lastIdx=-1; arr.forEach(function(ff,i){ if(ff.loc===area) lastIdx=i; });
@@ -1393,7 +1577,7 @@ function insertFinding(area,x,y){
   return f;
 }
 function addDefect(area){
-  var a=TIMBER_AREAS.filter(function(x){return x.name===area;})[0];
+  var a=AREAS().filter(function(x){return x.name===area;})[0];
   var c=(a&&a.center)?a.center:{x:50,y:50};
   var f=insertFinding(area,c.x+(Math.random()*10-5),c.y+(Math.random()*10-5));
   activeArea=area;
@@ -1631,7 +1815,7 @@ function planTap(e){
   var r=e.currentTarget.getBoundingClientRect();
   var x=Math.round((e.clientX-r.left)/r.width*100);
   var y=Math.round((e.clientY-r.top)/r.height*100);
-  if(surveyType==='timber'){
+  if(isMarkerDriven()){
     var f=insertFinding(activeArea,x,y);
     renderCapture();
     toast('Pin '+f.n+' dropped in '+activeArea+' at '+x+'% · '+y+'% — classify it in the panel');
@@ -1666,19 +1850,22 @@ function removeFinding(n){
 function buildPayload(){
   var d=D(), c=d.cover||{};
   var base={
-    survey_type:surveyType==='timber'?'timber':'condensation_mould',
+    survey_type:surveyType==='timber'?'timber':(surveyType==='damp'?'damp_investigation':'condensation_mould'),
     property:'7 Hamstead Meadow, Chidham, PO18 8TJ',
     reference:d.ref,
     inspection:{ date:dashVal('Inspected'), time:c.time||null, weather:dashVal('Weather'),
       external_temp:dashVal('Ext. temp'), occupancy:c.occupancy||dashVal('Occupancy')||'Occupied', access:c.access||'None' }
   };
-  if(surveyType==='timber'){
+  if(isMarkerDriven()){
     var pick=function(arr){return arr.filter(function(x){return x.on;}).map(function(x){return x.t;});};
     base.property_overview=PROPERTY_OVERVIEW.map(function(o){return {field:o.k,value:o.v,status:o.status};});
     base.methodology={ type:pick(d.methodology.type), areas:pick(d.methodology.areas),
       techniques:pick(d.methodology.techniques), limitations:d.methodology.limitations };
-    base.inspection_areas=TIMBER_AREAS.map(function(a){return {name:a.name,construction:a.construction,accessibility:a.access};});
+    base.inspection_areas=AREAS().map(function(a){return {name:a.name,construction:a.construction,accessibility:a.access};});
     base.findings=currentFindings().map(function(f){return {marker_no:f.n,area:f.loc,defect_type:f.type,status:f.statusLabel||f.status};});
+    if(d.external){
+      base.external_observations=d.external.map(function(o){return {heading:o.k.replace(/&amp;/g,'&'),observation:o.v,severity:o.tone};});
+    }
   }else{
     var pc=d.propertyContext||{};
     base.inspection.type=(d.inspectionMeta||{}).type||null;
@@ -1696,10 +1883,11 @@ function buildPayload(){
 function payloadSummary(){
   var p=buildPayload();
   var chips=[];
-  if(surveyType==='timber'){
+  if(isMarkerDriven()){
     chips=[p.property_overview.length+' property facts',
       p.inspection_areas.length+' inspection areas',
       p.findings.length+' findings'];
+    if(p.external_observations) chips.push(p.external_observations.length+' external observations');
   }else{
     chips=[p.rooms.length+' rooms assessed',
       'property context','temp + RH per room','ventilation + thermal','mould + condensation risk','overall risk'];
@@ -1786,7 +1974,8 @@ var LOGO_COLOUR='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAksAAADkCAYAAACIa
 function logoFull(variant,h){ return '<img class="brandlogo" src="'+(variant==='white'?LOGO_WHITE:LOGO_COLOUR)+'" alt="Damp Experts Group" style="height:'+h+'px;width:auto;display:block">'; }
 function reportHeader(title){
   var d=D();
-  var findSec = surveyType==='timber' ? 'rsec-6' : 'rsec-4';
+  /* Jumps to the Inspection & findings section of each report type. */
+  var findSec = surveyType==='damp' ? 'rsec-6' : (surveyType==='timber' ? 'rsec-6' : 'rsec-4');
   var stats=[
     ['Survey type',d.label],
     ['Report reference',d.ref],
@@ -1821,7 +2010,7 @@ var ICON={
 };
 function heroTrust(){
   var d=D();
-  var areas = surveyType==='timber' ? (d.methodology&&d.methodology.areas?d.methodology.areas.length:6) : (d.rooms?d.rooms.length:0);
+  var areas = isMarkerDriven() ? (d.methodology&&d.methodology.areas?d.methodology.areas.length:6) : (d.rooms?d.rooms.length:0);
   var finds = currentFindings().length;
   var active = currentFindings().filter(function(f){return f.status==='active'||f.status==='high';}).length;
   var items=[
@@ -2105,7 +2294,7 @@ function acceptWorks(){
 }
 
 function renderReport(){
-  var html = surveyType==='timber' ? timberReport() : cmReport();
+  var html = surveyType==='timber' ? timberReport() : (surveyType==='damp' ? dampReport() : cmReport());
   document.getElementById('reportMount').innerHTML = siteHeader()+html;
   assignSectionIds();
   drawPins('reportPins',true);
@@ -2143,6 +2332,41 @@ function scheduleHTML(list){
     h+='<div class="recbox"><h4>'+r.title+'</h4><div class="hint"><strong>Purpose —</strong> '+r.purpose+'</div><ul class="rec-scope">'+r.scope.map(function(s){return '<li>'+s+'</li>';}).join('')+'</ul><div class="hint" style="margin-top:8px"><strong>Linked —</strong> '+r.linked+'</div></div>';
   });
   return h;
+}
+
+/* §5 External Observations — standardised headings, rendered in a fixed
+   order so every damp report is directly comparable to the last. */
+function externalObsHTML(){
+  var ex=D().external||[], h='<div class="perfgrid">';
+  ex.forEach(function(o){
+    h+='<div class="perfitem"><div class="pk"><span class="pd" style="background:'+COLORS[o.tone]+'"></span>'+o.k+'</div><div class="pv">'+o.v+'</div></div>';
+  });
+  return h+'</div>';
+}
+/* Damp Investigation Survey report — section order follows the client
+   specification (Damp Investigation Survey Report §1–§6, plus works). */
+function dampReport(){
+  var d=D();
+  var flags='';
+  d.summary.forEach(function(s){ flags+='<div class="flagrow"><span class="fd" style="background:'+COLORS[s.tone]+'"></span><span class="fk">'+s.k+'</span><span class="fv" style="color:'+COLORS[s.tone]+'">'+s.v+'</span></div>'; });
+  return '<div class="report">'+reportHeader('Damp Investigation Survey Report')+
+    '<div class="rsection">'+sechd('1','Cover page')+coverPage()+'</div>'+
+    '<div class="rsection">'+sechd('2','Key findings')+'<div class="hint" style="margin:-8px 0 12px">A plain-English summary of what we found and what it means for your property.</div>'+keyFindingsHTML()+'</div>'+
+    '<div class="rsection">'+sechd('3','Property overview')+'<div class="hint" style="margin:-8px 0 12px">The key facts about your property that inform how each finding is assessed.</div>'+overviewHTML()+'</div>'+
+    '<div class="rsection">'+sechd('4','Inspection methodology')+methodologyHTML()+
+      '<div class="miniLbl" style="margin-top:18px">Inspection coverage</div>'+
+      '<div class="hint" style="margin:-4px 0 12px">What we were able to inspect, and where access was limited on the day.</div>'+coverageHTML()+'</div>'+
+    '<div class="rsection">'+sechd('5','External observations')+'<div class="hint" style="margin:-8px 0 12px">The same headings are assessed on every damp report, so nothing is missed and reports stay comparable.</div>'+externalObsHTML()+'</div>'+
+    '<div class="rsection">'+sechd('6','Inspection &amp; findings')+
+      '<div class="hint" style="margin:-8px 0 12px">Organised by area of your property — tap a numbered marker on the plan to open that defect.</div>'+
+      '<div class="findsec">'+
+        '<div class="findplan">'+planPanel()+
+          '<div class="miniLbl" style="margin-top:18px">Inspection summary</div><div class="flagwrap">'+flags+'</div></div>'+
+        '<div class="findaccwrap">'+findingsList('Findings — tap any to expand')+'</div>'+
+      '</div></div>'+
+    '<div class="rsection">'+sechd('7','Recommended schedule of works')+'<div class="hint" style="margin:-8px 0 12px">The works we recommend to resolve the issues found, with a quote to accept.</div>'+scheduleHTML(d.schedule)+acceptQuote()+'</div>'+
+    siteFooter()+
+  '</div>';
 }
 
 function cmReport(){
@@ -2196,7 +2420,7 @@ function findingDetailHTML(f){
   function chips(arr){ return '<div class="chips">'+arr.map(function(x){return '<span class="chip">'+x+'</span>';}).join('')+'</div>'; }
   function bullets(arr){ return '<ul class="evlist">'+arr.map(function(x){return '<li>'+x+'</li>';}).join('')+'</ul>'; }
   return (f.photo?'<img class="evidence" style="height:auto;object-fit:contain;padding:0;background:#f3f5f6" src="'+f.photo+'" alt="Evidence photo — '+f.loc+'">':'<div class="evidence">📷 Evidence photo — '+f.loc+'</div>')
-    +(f.elements&&f.elements.length?'<div class="miniLbl">Timber elements affected</div>'+chips(f.elements):'')
+    +(f.elements&&f.elements.length?'<div class="miniLbl">'+((CAPTURE_VOCAB[surveyType]||CAPTURE_VOCAB.timber).elementsLabel)+'</div>'+chips(f.elements):'')
     +(f.significance?'<div class="miniLbl">Structural significance</div><span class="sigbadge sig-'+f.significance.toLowerCase()+'">'+f.significance+'</span>':'')
     +(f.evidence&&f.evidence.length?'<div class="miniLbl">Evidence — objective observations</div>'+bullets(f.evidence):(f.moisture?'<div class="miniLbl">Moisture readings</div><div class="mreads">'+f.moisture+'</div>':''))
     +'<div class="miniLbl">Professional opinion</div><p style="font-size:13.5px;margin:0 0 12px">'+f.opinion+'</p>'
@@ -2218,13 +2442,13 @@ function findRow(f,grouped){
 }
 function renderReportRows(){
   var h='', d=D();
-  if(surveyType==='timber' && d.areas){
+  if(isMarkerDriven() && d.areas){
     d.areas.forEach(function(a){
       var fs=currentFindings().filter(function(f){return f.loc===a.name;});
       h+='<div class="areahd"><div class="aht">'+a.name+'</div>'+
          '<div class="ahmeta"><span><strong>Construction</strong> '+a.construction+'</span>'+
          '<span><strong>Accessibility</strong> '+a.accessibility+(a.restrictions?' \u2014 '+a.restrictions:'')+'</span></div></div>';
-      if(!fs.length){ h+='<div class="areanone">No timber defects identified in this area.</div>'; }
+      if(!fs.length){ h+='<div class="areanone">No '+(surveyType==='damp'?'damp':'timber')+' defects identified in this area.</div>'; }
       fs.forEach(function(f){ h+=findRow(f,true); });
     });
   } else {
