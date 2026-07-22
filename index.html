@@ -1581,7 +1581,7 @@ function spClearTrace(){ SITEPLAN.traceImg=null; SITEPLAN.traceW=null; SITEPLAN.
 function rasterToBase64(src){
   return new Promise(function(res,rej){
     var im=new Image();
-    im.onload=function(){ var c=document.createElement('canvas'); c.width=im.naturalWidth||900; c.height=im.naturalHeight||700; var g=c.getContext('2d'); g.fillStyle='#fff'; g.fillRect(0,0,c.width,c.height); g.drawImage(im,0,0,c.width,c.height); try{ res(c.toDataURL('image/png').split(',')[1]); }catch(err){ rej(err); } };
+    im.onload=function(){ var iw=im.naturalWidth||900, ih=im.naturalHeight||700, MAX=1500, sc=Math.min(1,MAX/Math.max(iw,ih)); var c=document.createElement('canvas'); c.width=Math.round(iw*sc); c.height=Math.round(ih*sc); var g=c.getContext('2d'); g.fillStyle='#fff'; g.fillRect(0,0,c.width,c.height); g.drawImage(im,0,0,c.width,c.height); try{ res(c.toDataURL('image/png').split(',')[1]); }catch(err){ rej(err); } };
     im.onerror=function(){ rej(new Error('image load')); };
     im.src=src;
   });
@@ -2131,14 +2131,14 @@ function spImportPolycam(){
 /* Read the real rooms + printed measurements off the uploaded plan with AI vision. */
 function spReadPolycamRooms(){
   var img=SITEPLAN.traceImg; if(!img){ return; }
-  toast('Reading the rooms and measurements off your plan…');
+  spBusy(true,'Reading your plan… this can take up to a minute. Keep this page open.');
   var wld=(typeof spWorld==='function')?spWorld():{w:400,h:320};
   var gotReply=false;
   rasterToBase64(img).then(function(b64){
     return nuAI({
       system:'You read property floor plans and return only strict JSON.',
       prompt:'This is a property floor plan image. For each labelled room, TRACE the outline of its walls as an ordered list of corner points going clockwise around the room. Return ONLY JSON: {"rooms":[{"name":"Living Room","dims":"3.2 × 4.1m","points":[[0.10,0.20],[0.40,0.20],[0.40,0.35],[0.46,0.35],[0.46,0.55],[0.10,0.55]]}]} where name is the printed room label, dims is the printed size if shown (else ""), and points are [x,y] fractions (0-1) of the whole image for every corner of that room\'s wall outline, in order around the room. Follow the real shape exactly: trace bay windows, alcoves, chimney breasts, angled walls and L-shapes as extra points, do NOT simplify a room to a rectangle. Use 4 points for a plain rectangular room and up to ~16 for complex ones. No commentary.',
-      image:{media_type:'image/png',data:b64}, max_tokens:3000
+      image:{media_type:'image/png',data:b64}, max_tokens:3000, noThink:true
     });
   }).then(function(txt){
     gotReply=true;
@@ -2165,7 +2165,7 @@ function spReadPolycamRooms(){
     } else {
       toast('Could not reach the AI reader'+(msg?' ('+msg+')':'')+'. Check you are on the live Netlify site and the latest deploy has finished, then try again. Your plan is loaded either way.');
     }
-  });
+  }).then(function(){ spBusy(false); }, function(){ spBusy(false); });
 }
 function spReadRoomsBtn(){ if(!SITEPLAN.traceImg){ toast('Upload a plan first'); return; } spReadPolycamRooms(); }
 function spChangePlanSource(){ SITEPLAN.planSource=null; renderSitePlan(); }
@@ -3868,6 +3868,21 @@ function syncEmail(){
    ================================================================== */
 var tT;
 function toast(m){var t=document.getElementById('toast');t.textContent=m;t.classList.add('show');clearTimeout(tT);tT=setTimeout(function(){t.classList.remove('show');},2200);}
+/* Persistent working banner (stays up for the whole AI call, unlike a toast). */
+function spBusy(on,msg){
+  var b=document.getElementById('spBusyBar');
+  if(on){
+    if(!b){
+      if(!document.getElementById('spBusyStyle')){ var st=document.createElement('style'); st.id='spBusyStyle'; st.textContent='@keyframes spspin{to{transform:rotate(360deg)}}'; document.head.appendChild(st); }
+      b=document.createElement('div'); b.id='spBusyBar';
+      b.style.cssText='position:fixed;left:50%;bottom:26px;transform:translateX(-50%);z-index:9999;background:#0f172a;color:#fff;padding:13px 20px;border-radius:14px;font:500 14px/1.4 DM Sans,system-ui,sans-serif;box-shadow:0 10px 34px rgba(0,0,0,.28);display:flex;align-items:center;gap:11px;max-width:92vw';
+      b.innerHTML='<span style="flex:none;width:16px;height:16px;border:2px solid rgba(255,255,255,.35);border-top-color:#fff;border-radius:50%;display:inline-block;animation:spspin .8s linear infinite"></span><span id="spBusyTxt"></span>';
+      document.body.appendChild(b);
+    }
+    document.getElementById('spBusyTxt').textContent=msg||'Working…';
+    b.style.display='flex';
+  } else if(b){ b.style.display='none'; }
+}
 
 /* ---- Real AI, via the Netlify function (keeps the API key server-side) ----
    Any feature that needs Claude calls nuAI({system, prompt, image?, max_tokens?}).

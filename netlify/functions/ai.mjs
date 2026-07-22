@@ -25,7 +25,7 @@ export default async (req) => {
   let body;
   try { body = await req.json(); } catch { return cors(json({ error: "Invalid JSON body" }, 400)); }
 
-  const { system, prompt, image, max_tokens } = body || {};
+  const { system, prompt, image, max_tokens, noThink } = body || {};
   if (!prompt) return cors(json({ error: "Missing 'prompt'" }, 400));
 
   // Build the user turn: optional image first (Claude can read the photo), then the text.
@@ -39,7 +39,8 @@ export default async (req) => {
     const msg = await client.messages.create({
       model: "claude-opus-4-8",
       max_tokens: Math.min(Math.max(parseInt(max_tokens, 10) || 4000, 256), 16000),
-      thinking: { type: "adaptive" },
+      // Quick structured jobs (e.g. reading rooms off a plan) pass noThink for speed.
+      thinking: noThink ? { type: "disabled" } : { type: "adaptive" },
       system: system || undefined,
       messages: [{ role: "user", content }],
     });
