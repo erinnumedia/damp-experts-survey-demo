@@ -11,7 +11,9 @@
  */
 import Anthropic from "@anthropic-ai/sdk";
 
-const client = new Anthropic(); // reads ANTHROPIC_API_KEY from the environment
+// reads ANTHROPIC_API_KEY from the environment. maxRetries lets the SDK ride
+// through transient 429/500/529 "overloaded" blips with its own backoff.
+const client = new Anthropic({ maxRetries: 4 });
 
 export default async (req) => {
   if (req.method === "OPTIONS") return cors(new Response(null, { status: 204 }));

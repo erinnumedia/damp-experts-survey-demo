@@ -2157,10 +2157,12 @@ function spReadPolycamRooms(){
     SITEPLAN.rooms=rooms; SITEPLAN.roomSeq=rooms.length+1; renderSitePlan();
     toast(rooms.length+' rooms read from your plan with their measurements.');
   }).catch(function(err){
+    var msg=(err&&err.message)?String(err.message):'';
     if(gotReply){
       toast('The AI read your plan but the room shapes came back unreadable. Tap “Read rooms & measurements” to try again.');
+    } else if(/overload|529|too many/i.test(msg)){
+      toast('Claude’s servers are very busy right now (nothing wrong with your setup). Give it a minute, then tap “Read rooms & measurements” again. Your plan is loaded.');
     } else {
-      var msg=(err&&err.message)?String(err.message):'';
       toast('Could not reach the AI reader'+(msg?' ('+msg+')':'')+'. Check you are on the live Netlify site and the latest deploy has finished, then try again. Your plan is loaded either way.');
     }
   });
@@ -3872,11 +3874,20 @@ function toast(m){var t=document.getElementById('toast');t.textContent=m;t.class
    It returns the generated text. If the backend isn't reachable (e.g. the local
    preview, or before the key is set), it throws, so callers fall back to the
    built-in simulation and nothing breaks. */
-async function nuAI(opts){
+async function nuAI(opts, _try){
+  _try = _try || 0;
   var r = await fetch('/.netlify/functions/ai', {
     method:'POST', headers:{'content-type':'application/json'}, body: JSON.stringify(opts||{})
   });
-  if(!r.ok){ var e={}; try{ e=await r.json(); }catch(_){}; throw new Error(e.error||('AI request failed ('+r.status+')')); }
+  if(!r.ok){
+    var e={}; try{ e=await r.json(); }catch(_){}
+    var overloaded = r.status===429 || r.status>=500 || /overload|529|too many/i.test(String(e.error||''));
+    if(overloaded && _try<3){ // Claude was momentarily busy: wait and try again quietly
+      await new Promise(function(res){ setTimeout(res, 1500*Math.pow(2,_try)); });
+      return nuAI(opts, _try+1);
+    }
+    throw new Error(e.error||('AI request failed ('+r.status+')'));
+  }
   var d = await r.json();
   return (d && d.text) || '';
 }
