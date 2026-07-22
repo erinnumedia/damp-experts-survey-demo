@@ -1798,9 +1798,10 @@ function spHitDraggable(x,y){
 function spPointerDown(e){
   var sp=SITEPLAN;
   if(sp.mode==='crop'){
-    e.preventDefault(); var cp=spEvtXY(e); sp.draw={x1:cp.x,y1:cp.y,x2:cp.x,y2:cp.y,_crop:true};
-    var pcr=document.getElementById('spPreviewR'); if(pcr){ pcr.setAttribute('stroke','#0ea5e9'); pcr.setAttribute('stroke-dasharray','6 4'); pcr.setAttribute('fill','#0ea5e9'); pcr.setAttribute('fill-opacity','0.12'); pcr.setAttribute('x',cp.x);pcr.setAttribute('y',cp.y);pcr.setAttribute('width',0);pcr.setAttribute('height',0); pcr.style.display='block'; }
-    try{ e.target.setPointerCapture&&e.target.setPointerCapture(e.pointerId); }catch(_){}
+    e.preventDefault(); var cp=spEvtXY(e); var hh=spCropHandleAt(cp.x,cp.y);
+    if(hh && sp.cropRect){ sp.cropDrag={handle:hh,ptrX:cp.x,ptrY:cp.y,o:{x:sp.cropRect.x,y:sp.cropRect.y,w:sp.cropRect.w,h:sp.cropRect.h}};
+      try{ e.currentTarget.setPointerCapture&&e.currentTarget.setPointerCapture(e.pointerId); }catch(_){}
+    }
     return;
   }
   if(sp.mode==='move'){
@@ -1846,9 +1847,20 @@ function spPointerMove(e){
     var g=document.getElementById('sproom-'+R.id); if(g){ var rc=g.querySelector('rect'); if(rc){ rc.setAttribute('x',nx);rc.setAttribute('y',ny);rc.setAttribute('width',nw);rc.setAttribute('height',nh); } }
     return;
   }
+  if(sp.cropDrag){ var cpm=spEvtXY(e), d=sp.cropDrag, o=d.o, cc=d.handle, dx=cpm.x-d.ptrX, dy=cpm.y-d.ptrY, nx=o.x,ny=o.y,nw=o.w,nh=o.h, wd=spWorld();
+    if(cc.indexOf('e')>=0) nw=o.w+dx;
+    if(cc.indexOf('w')>=0){ nx=o.x+dx; nw=o.w-dx; }
+    if(cc.indexOf('s')>=0) nh=o.h+dy;
+    if(cc.indexOf('n')>=0){ ny=o.y+dy; nh=o.h-dy; }
+    if(nw<40){ if(cc.indexOf('w')>=0) nx=o.x+o.w-40; nw=40; }
+    if(nh<40){ if(cc.indexOf('n')>=0) ny=o.y+o.h-40; nh=40; }
+    if(nx<0){ nx=0; } if(ny<0){ ny=0; } if(nx+nw>wd.w) nw=wd.w-nx; if(ny+nh>wd.h) nh=wd.h-ny;
+    sp.cropRect={x:nx,y:ny,w:nw,h:nh};
+    var ov=document.getElementById('spCropOverlay'); if(ov) ov.innerHTML=spCropOverlaySVG(wd);
+    return;
+  }
   if(sp.drag){ var mp=spEvtXY(e); if(sp.drag.el) sp.drag.el.setAttribute('transform','translate('+(mp.x-sp.drag.ptrX)+','+(mp.y-sp.drag.ptrY)+')'); return; }
   if(!sp.draw) return; var p=spEvtXY(e); sp.draw.x2=p.x; sp.draw.y2=p.y;
-  if(sp.draw._crop){ var pcr=document.getElementById('spPreviewR'); if(pcr){ pcr.setAttribute('x',Math.min(sp.draw.x1,p.x));pcr.setAttribute('y',Math.min(sp.draw.y1,p.y));pcr.setAttribute('width',Math.abs(p.x-sp.draw.x1));pcr.setAttribute('height',Math.abs(p.y-sp.draw.y1)); } return; }
   if(sp.draw._tool){ return; }
   if(sp.draw._room==='line'){ var pvl=document.getElementById('spPreview'); if(pvl){ pvl.setAttribute('x2',p.x); pvl.setAttribute('y2',p.y); } return; }
   if(sp.draw._room==='rect'){ var prm=document.getElementById('spPreviewR'); if(prm){ prm.setAttribute('x',Math.min(sp.draw.x1,p.x));prm.setAttribute('y',Math.min(sp.draw.y1,p.y));prm.setAttribute('width',Math.abs(p.x-sp.draw.x1));prm.setAttribute('height',Math.abs(p.y-sp.draw.y1)); } return; }
@@ -1857,13 +1869,7 @@ function spPointerMove(e){
 }
 function spPointerUp(e){
   var sp=SITEPLAN;
-  if(sp.mode==='crop'&&sp.draw&&sp.draw._crop){
-    var cd=sp.draw; sp.draw=null;
-    var cx=Math.min(cd.x1,cd.x2),cy=Math.min(cd.y1,cd.y2),cw=Math.abs(cd.x2-cd.x1),ch=Math.abs(cd.y2-cd.y1);
-    var pcr=document.getElementById('spPreviewR'); if(pcr){ pcr.style.display='none'; pcr.setAttribute('stroke-dasharray','0'); }
-    if(cw>20&&ch>20){ spApplyCrop(cx,cy,cw,ch); } else { sp.mode='damp'; renderSitePlan(); toast('Crop cancelled, drag a bigger box next time.'); }
-    return;
-  }
+  if(sp.cropDrag){ sp.cropDrag=null; return; }
   if(sp.resize){ sp.resize=null; renderSitePlan(); return; }
   if(sp.drag){
     var g=sp.drag, mp=spEvtXY(e), dx=mp.x-g.ptrX, dy=mp.y-g.ptrY;
@@ -2006,8 +2012,21 @@ function spSVG(){
   /* north arrow + scale */
   s+='<g transform="translate('+(wld.w-28)+',28)"><circle cx="0" cy="0" r="13" fill="#fff" stroke="#64748b" stroke-width="1"/><path d="M 0,-9 L 4,6 L 0,4 L -4,6 Z" fill="#1f2937"/><text x="0" y="20" text-anchor="middle" font-size="8" fill="#64748b">N</text></g>';
   s+='<text x="10" y="'+(wld.h-8)+'" font-size="10" fill="#94a3b8" font-style="italic">Not to scale</text>';
+  if(sp.mode==='crop') s+='<g id="spCropOverlay">'+spCropOverlaySVG(wld)+'</g>';
   s+='</svg>';
   return s;
+}
+/* The crop frame: dimmed outside + dashed rectangle + 8 draggable handles. */
+function spCropOverlaySVG(wld){
+  var cr=SITEPLAN.cropRect; if(!cr) return '';
+  var W=wld.w, H=wld.h, o='';
+  o+='<rect x="0" y="0" width="'+W+'" height="'+Math.max(0,cr.y)+'" fill="#0f172a" fill-opacity="0.5"/>';
+  o+='<rect x="0" y="'+(cr.y+cr.h)+'" width="'+W+'" height="'+Math.max(0,H-cr.y-cr.h)+'" fill="#0f172a" fill-opacity="0.5"/>';
+  o+='<rect x="0" y="'+cr.y+'" width="'+Math.max(0,cr.x)+'" height="'+cr.h+'" fill="#0f172a" fill-opacity="0.5"/>';
+  o+='<rect x="'+(cr.x+cr.w)+'" y="'+cr.y+'" width="'+Math.max(0,W-cr.x-cr.w)+'" height="'+cr.h+'" fill="#0f172a" fill-opacity="0.5"/>';
+  o+='<rect x="'+cr.x+'" y="'+cr.y+'" width="'+cr.w+'" height="'+cr.h+'" fill="none" stroke="#fff" stroke-width="2" stroke-dasharray="6 4"/>';
+  [[cr.x,cr.y],[cr.x+cr.w,cr.y],[cr.x,cr.y+cr.h],[cr.x+cr.w,cr.y+cr.h],[cr.x+cr.w/2,cr.y],[cr.x+cr.w/2,cr.y+cr.h],[cr.x,cr.y+cr.h/2],[cr.x+cr.w,cr.y+cr.h/2]].forEach(function(p){ o+='<circle cx="'+p[0]+'" cy="'+p[1]+'" r="8" fill="#fff" stroke="#0ea5e9" stroke-width="2.5"/>'; });
+  return o;
 }
 
 /* ---- the key / legend (colour = damp type; line/fill/hatch = wall/floor/ceiling) ---- */
@@ -2169,8 +2188,15 @@ function spImportPolycam(){
     im.src=dataUrl;
   });
 }
-/* Manual crop: enter crop mode, drag a box, it applies with marks kept fixed to the plan. */
-function spStartCrop(){ if(!SITEPLAN.traceImg){ toast('Upload a plan first'); return; } SITEPLAN.mode='crop'; renderSitePlan(); toast('Drag a box around the part of the plan you want to keep.'); }
+/* Manual crop: a frame with 8 handles you drag inward, then Apply. Marks stay fixed. */
+function spStartCrop(){ if(!SITEPLAN.traceImg){ toast('Upload a plan first'); return; } var w=spWorld(); SITEPLAN.mode='crop'; SITEPLAN.cropRect={x:0,y:0,w:w.w,h:w.h}; SITEPLAN.cropDrag=null; renderSitePlan(); toast('Drag the handles in to frame the plan, then tap Apply crop.'); }
+function spCropHandleAt(x,y){ var cr=SITEPLAN.cropRect; if(!cr) return null;
+  var h={ nw:[cr.x,cr.y], ne:[cr.x+cr.w,cr.y], sw:[cr.x,cr.y+cr.h], se:[cr.x+cr.w,cr.y+cr.h],
+          n:[cr.x+cr.w/2,cr.y], s:[cr.x+cr.w/2,cr.y+cr.h], e:[cr.x+cr.w,cr.y+cr.h/2], w:[cr.x,cr.y+cr.h/2] };
+  for(var k in h){ if(Math.hypot(x-h[k][0],y-h[k][1])<14) return k; } return null;
+}
+function spApplyCropRect(){ var cr=SITEPLAN.cropRect; if(!cr){ return; } if(cr.w<40||cr.h<40){ toast('That frame is too small.'); return; } var r={x:cr.x,y:cr.y,w:cr.w,h:cr.h}; SITEPLAN.cropRect=null; SITEPLAN.cropDrag=null; spApplyCrop(r.x,r.y,r.w,r.h); }
+function spCancelCrop(){ SITEPLAN.cropRect=null; SITEPLAN.cropDrag=null; SITEPLAN.mode='damp'; renderSitePlan(); }
 function spResetCrop(){ var sp=SITEPLAN; if(!sp.traceImgOrig){ toast('Nothing to reset'); return; } sp.traceImg=sp.traceImgOrig; sp.traceW=sp.traceWOrig||400; sp.traceH=sp.traceHOrig||320; renderSitePlan(); toast('Crop reset to the full plan.'); }
 function spApplyCrop(cx,cy,cw,ch){
   var sp=SITEPLAN; if(!sp.traceImg){ return; }
@@ -2278,7 +2304,7 @@ function renderSitePlan(){
       : 'Tap the plan to drop a '+tool+', then drag it into place with Arrange.';
     picker+='<div class="sp-hint">'+(sp.traceImg?'Tracing the uploaded plan underneath. ':'')+rhint+'</div>';
   } else if(sp.mode==='crop'){
-    picker='<div class="sp-card">✂ <b>Crop the plan.</b> Drag a box around the part you want to keep. Everything outside it (logos, title, compass) is trimmed off, and your marks stay fixed to the plan. <button class="btn ghost sm" style="margin-left:8px" onclick="spSetMode(\'damp\')">Cancel</button></div>';
+    picker='<div class="sp-card">✂ <b>Crop the plan.</b> Drag the blue handles inward to frame the part you want to keep. Everything outside the frame (logos, title, compass) is trimmed off, and your marks stay fixed to the plan.<div style="margin-top:8px"><button class="btn slate sm" onclick="spApplyCropRect()">Apply crop</button> <button class="btn ghost sm" onclick="spCancelCrop()">Cancel</button></div></div>';
   } else if(sp.mode==='move'){
     picker=(sp.planType==='imported')
       ? '<div class="sp-card">✥ This is an imported plan <b>image</b>, so the rooms are part of the picture and can’t be moved. Drag your readings and photo points to reposition them. To get editable rooms you can arrange, use <b>Build with rooms</b>, or rebuild the image into rooms.</div>'
