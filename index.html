@@ -1438,8 +1438,8 @@ function planSVG(){
         body+='<rect x="'+cx+'" y="'+cy+'" width="'+cs+'" height="'+cs+'" rx="2" fill="#e2e8f0" stroke="'+rstroke+'" stroke-width="3"/><text x="'+(r.x+r.w/2)+'" y="'+(cy+cs+13)+'" text-anchor="middle">'+r.name+'</text>';
       } else if(r.shape==='l'){ var cw2=r.w*0.42, ch2=r.h*0.42, pts=[[r.x,r.y],[r.x+r.w-cw2,r.y],[r.x+r.w-cw2,r.y+ch2],[r.x+r.w,r.y+ch2],[r.x+r.w,r.y+r.h],[r.x,r.y+r.h]];
         body+='<polygon points="'+pts.map(function(p){return Math.round(p[0])+','+Math.round(p[1]);}).join(' ')+'" fill="'+rfill+'" stroke="'+rstroke+'" stroke-width="3" stroke-linejoin="round"/><text x="'+(r.x+r.w*0.32)+'" y="'+(r.y+r.h*0.72)+'" text-anchor="middle">'+r.name+'</text>';
-      } else if(r.shape==='poly'){ body+='<polygon points="'+r.poly.map(function(p){return p[0]+','+p[1];}).join(' ')+'" fill="'+rfill+'" stroke="'+rstroke+'" stroke-width="3" stroke-linejoin="round"/><text x="'+(r.x+r.w/2)+'" y="'+(r.y+r.h/2)+'" text-anchor="middle" dominant-baseline="central">'+r.name+'</text>';
-      } else { body+='<rect x="'+r.x+'" y="'+r.y+'" width="'+r.w+'" height="'+r.h+'" rx="3" fill="'+rfill+'" stroke="'+rstroke+'" stroke-width="3"/><text x="'+(r.x+r.w/2)+'" y="'+(r.y+r.h/2)+'" text-anchor="middle" dominant-baseline="central">'+r.name+'</text>'; }
+      } else if(r.shape==='poly'){ body+='<polygon points="'+r.poly.map(function(p){return p[0]+','+p[1];}).join(' ')+'" fill="'+rfill+'" stroke="'+rstroke+'" stroke-width="3" stroke-linejoin="round"/>'+(poly?'':'<text x="'+(r.x+r.w/2)+'" y="'+(r.y+r.h/2)+'" text-anchor="middle" dominant-baseline="central">'+r.name+'</text>');
+      } else { body+='<rect x="'+r.x+'" y="'+r.y+'" width="'+r.w+'" height="'+r.h+'" rx="3" fill="'+rfill+'" stroke="'+rstroke+'" stroke-width="3"/>'+(poly?'':'<text x="'+(r.x+r.w/2)+'" y="'+(r.y+r.h/2)+'" text-anchor="middle" dominant-baseline="central">'+r.name+'</text>'); }
     });
     return '<svg class="planimg" viewBox="0 0 '+wld.w+' '+wld.h+'" xmlns="http://www.w3.org/2000/svg">'+bg+body.replace(/<text /g,'<text fill="#475569" font-family="DM Sans" font-size="12" ')+'</svg>';
   }
@@ -1943,8 +1943,14 @@ function spSVG(){
     s+='<rect x="0" y="0" width="'+wld.w+'" height="'+wld.h+'" fill="url(#spgrid)"/>';
     if(sp.traceImg) s+='<image href="'+sp.traceImg+'" x="0" y="0" width="'+wld.w+'" height="'+wld.h+'" preserveAspectRatio="xMidYMid meet" opacity="'+(sp.planSource==='polycam'?0.95:0.45)+'"/>';
     var spOutlineOnly=(sp.planSource==='polycam');
-    spLayoutRooms().forEach(function(r){
+    spLayoutRooms().forEach(function(r,ri){
       var rMeasure=(r.roomArea||r.dims||'');
+      /* Over a Polycam plan the names/areas are already printed on the image, so
+         we only drop a small number badge (ties to the list) instead of duplicating them. */
+      function rLabel(cx,cy){
+        if(spOutlineOnly){ return '<circle cx="'+cx+'" cy="'+cy+'" r="11" fill="#1F8385" fill-opacity="0.92" stroke="#fff" stroke-width="1.5"/><text x="'+cx+'" y="'+cy+'" text-anchor="middle" dominant-baseline="central" font-size="12" font-weight="700" fill="#fff">'+(ri+1)+'</text>'; }
+        return spRoomLabelSVG(r.name, cx, cy-(rMeasure?7:0), r.w)+(rMeasure?'<text x="'+cx+'" y="'+(cy+10)+'" text-anchor="middle" font-size="10" font-weight="600" fill="#1F8385">'+spEsc(rMeasure)+'</text>':'');
+      }
       s+='<g id="sproom-'+r.id+'" class="sp-groom">';
       if(r.shape==='chimney'){
         var cs=Math.min(r.w,r.h)*0.62, cx=r.x+(r.w-cs)/2, cy=r.y+(r.h-cs)/2;
@@ -1956,13 +1962,11 @@ function spSVG(){
         s+='<polygon points="'+pts.map(function(p){return Math.round(p[0])+','+Math.round(p[1]);}).join(' ')+'" fill="#fff" stroke="#334155" stroke-width="2.5" stroke-linejoin="round"/>';
         s+=spRoomLabelSVG(r.name, r.x+r.w*0.32, r.y+r.h*0.72, r.w*0.62);
       } else if(r.shape==='poly'){
-        s+='<polygon points="'+r.poly.map(function(p){return p[0]+','+p[1];}).join(' ')+'" fill="'+(spOutlineOnly?'none':'#fff')+'" stroke="'+(spOutlineOnly?'#1F8385':'#334155')+'" stroke-width="2.5" stroke-linejoin="round"/>';
-        s+=spRoomLabelSVG(r.name, r.x+r.w/2, r.y+r.h/2-(rMeasure?7:0), r.w);
-        if(rMeasure) s+='<text x="'+(r.x+r.w/2)+'" y="'+(r.y+r.h/2+10)+'" text-anchor="middle" font-size="10" font-weight="600" fill="#1F8385">'+spEsc(rMeasure)+'</text>';
+        s+='<polygon points="'+r.poly.map(function(p){return p[0]+','+p[1];}).join(' ')+'" fill="'+(spOutlineOnly?'#1F8385':'#fff')+'" fill-opacity="'+(spOutlineOnly?'0.06':'1')+'" stroke="'+(spOutlineOnly?'#1F8385':'#334155')+'" stroke-width="2.5" stroke-linejoin="round"/>';
+        s+=rLabel(r.x+r.w/2, r.y+r.h/2);
       } else {
-        s+='<rect x="'+r.x+'" y="'+r.y+'" width="'+r.w+'" height="'+r.h+'" rx="3" fill="'+(spOutlineOnly?'none':'#fff')+'" stroke="'+(spOutlineOnly?'#1F8385':'#334155')+'" stroke-width="2.5"/>';
-        s+=spRoomLabelSVG(r.name, r.x+r.w/2, r.y+r.h/2-(rMeasure?7:0), r.w);
-        if(rMeasure) s+='<text x="'+(r.x+r.w/2)+'" y="'+(r.y+r.h/2+10)+'" text-anchor="middle" font-size="10" font-weight="600" fill="#1F8385">'+spEsc(rMeasure)+'</text>';
+        s+='<rect x="'+r.x+'" y="'+r.y+'" width="'+r.w+'" height="'+r.h+'" rx="3" fill="'+(spOutlineOnly?'#1F8385':'#fff')+'" fill-opacity="'+(spOutlineOnly?'0.06':'1')+'" stroke="'+(spOutlineOnly?'#1F8385':'#334155')+'" stroke-width="2.5"/>';
+        s+=rLabel(r.x+r.w/2, r.y+r.h/2);
         if(sp.mode==='move'){ [[r.x,r.y,'nwse'],[r.x+r.w,r.y,'nesw'],[r.x,r.y+r.h,'nesw'],[r.x+r.w,r.y+r.h,'nwse'],[r.x+r.w/2,r.y,'ns'],[r.x+r.w/2,r.y+r.h,'ns'],[r.x+r.w,r.y+r.h/2,'ew'],[r.x,r.y+r.h/2,'ew']].forEach(function(p){ s+='<circle cx="'+p[0]+'" cy="'+p[1]+'" r="4.5" fill="#fff" stroke="#1F8385" stroke-width="1.8" class="sp-handle" style="cursor:'+p[2]+'-resize"/>'; }); }
       }
       s+='</g>';
@@ -2197,34 +2201,23 @@ function spReadPolycamRooms(){
   rasterToBase64(img).then(function(b64){
     return nuAI({
       system:'You read property floor plans and return only strict JSON.',
-      prompt:'This is a property floor plan image that also has branding on it (a title such as "Floorplan", an address line, a total-area line, a company logo, and a compass/north rose). TASKS: (1) plan_box = the tight bounding box of ONLY the floor-plan drawing itself, EXCLUDING the title text, address, total line, logo and compass, as [x,y,w,h] fractions (0-1) of the whole image. (2) For each labelled room: read its printed NAME, its printed floor AREA (e.g. "5.5 m²"), its printed width × length DIMS if shown, and TRACE its wall outline as ordered [x,y] fraction points (0-1 of the whole image) going clockwise. Also read the TOTAL floor area if printed. Return ONLY JSON: {"plan_box":[0.02,0.14,0.96,0.82],"total":"44 m²","rooms":[{"name":"Living Room","area":"11 m²","dims":"3.2 × 4.1 m","points":[[0.10,0.20],[0.40,0.20],[0.40,0.55],[0.10,0.55]]}]} where area/dims are "" if not printed. Trace bay windows, alcoves and L-shapes as extra points, do NOT simplify to a rectangle. Read measurements EXACTLY as printed, used for quoting. No commentary.',
-      image:{media_type:'image/png',data:b64}, max_tokens:3000, noThink:true
+      prompt:'This is a property floor plan image. TRACE the rooms exactly. For EACH labelled room: read its printed NAME, its printed floor AREA (e.g. "5.5 m²"), its printed width × length DIMS if shown, and TRACE its wall outline as an ordered list of [x,y] corner points going clockwise around the room. Follow every wall: include a point at every corner, and trace bay windows, alcoves, chimney breasts, angled walls and L-shapes as extra points. Do NOT simplify a room to a rectangle. Also read the TOTAL floor area if printed. Points are [x,y] fractions (0-1) of the whole image. Return ONLY JSON: {"total":"44 m²","rooms":[{"name":"Living Room","area":"11 m²","dims":"3.2 × 4.1 m","points":[[0.10,0.20],[0.40,0.20],[0.40,0.35],[0.46,0.35],[0.46,0.55],[0.10,0.55]]}]} where area/dims are "" if not printed. Read measurements EXACTLY as printed, used for quoting. No commentary.',
+      image:{media_type:'image/png',data:b64}, max_tokens:3200, noThink:true
     });
   }).then(function(txt){
     gotReply=true;
     var m=txt.match(/\{[\s\S]*\}/); var data=JSON.parse(m?m[0]:txt);
-    /* Crop the Polycam title/logo band off the image, keeping only the drawing.
-       plan_box is a fraction box of the ORIGINAL image; rooms are re-based into it. */
-    var pb=data.plan_box, box={x:0,y:0,w:1,h:1};
-    if(pb && pb.length===4 && pb[2]>0.3 && pb[3]>0.3){ box={x:Math.max(0,pb[0]),y:Math.max(0,pb[1]),w:Math.min(1,pb[2]),h:Math.min(1,pb[3])}; }
-    return spCropImage(SITEPLAN.traceImg, box).then(function(cr){
-      if(cr.cropped){ SITEPLAN.traceImg=cr.dataUrl; SITEPLAN.traceW=400; SITEPLAN.traceH=Math.max(220,Math.round(400*(cr.h/cr.w))); }
-      else { box={x:0,y:0,w:1,h:1}; }
-      var W2=SITEPLAN.traceW||400, H2=SITEPLAN.traceH||320;
-      var rooms=(data.rooms||[]).map(function(r,i){
-        var pts=(r.points||[]).filter(function(p){return p&&p.length>=2;}).map(function(p){
-          var fx=((p[0]||0)-box.x)/box.w, fy=((p[1]||0)-box.y)/box.h;
-          return [Math.round(fx*W2), Math.round(fy*H2)];
-        });
-        if(pts.length<3){ return {id:i+1,name:(r.name||('Room '+(i+1))),roomArea:(r.area||''),dims:(r.dims||''),shape:'rect',x:Math.round(0.1*W2),y:Math.round((i*0.18+0.1)*H2),w:Math.round(0.25*W2),h:Math.round(0.15*H2)}; }
-        var xs=pts.map(function(p){return p[0];}), ys=pts.map(function(p){return p[1];});
-        var minx=Math.min.apply(null,xs), miny=Math.min.apply(null,ys), maxx=Math.max.apply(null,xs), maxy=Math.max.apply(null,ys);
-        return {id:i+1,name:(r.name||('Room '+(i+1))),roomArea:(r.area||''),dims:(r.dims||''),shape:'poly',poly:pts,x:minx,y:miny,w:Math.max(20,maxx-minx),h:Math.max(20,maxy-miny)};
-      });
-      if(!rooms.length){ toast('No rooms could be read from the plan. You can still mark the damp on it.'); renderSitePlan(); return; }
-      SITEPLAN.rooms=rooms; SITEPLAN.roomSeq=rooms.length+1; SITEPLAN.planTotal=(data.total||''); renderSitePlan();
-      toast(rooms.length+' rooms read'+(SITEPLAN.planTotal?', '+SITEPLAN.planTotal+' total':'')+'. Measurements pulled straight from your plan.');
+    var W2=SITEPLAN.traceW||400, H2=SITEPLAN.traceH||320;
+    var rooms=(data.rooms||[]).map(function(r,i){
+      var pts=(r.points||[]).filter(function(p){return p&&p.length>=2;}).map(function(p){ return [Math.round((p[0]||0)*W2), Math.round((p[1]||0)*H2)]; });
+      if(pts.length<3){ return {id:i+1,name:(r.name||('Room '+(i+1))),roomArea:(r.area||''),dims:(r.dims||''),shape:'rect',x:Math.round(0.1*W2),y:Math.round((i*0.18+0.1)*H2),w:Math.round(0.25*W2),h:Math.round(0.15*H2)}; }
+      var xs=pts.map(function(p){return p[0];}), ys=pts.map(function(p){return p[1];});
+      var minx=Math.min.apply(null,xs), miny=Math.min.apply(null,ys), maxx=Math.max.apply(null,xs), maxy=Math.max.apply(null,ys);
+      return {id:i+1,name:(r.name||('Room '+(i+1))),roomArea:(r.area||''),dims:(r.dims||''),shape:'poly',poly:pts,x:minx,y:miny,w:Math.max(20,maxx-minx),h:Math.max(20,maxy-miny)};
     });
+    if(!rooms.length){ toast('No rooms could be read from the plan. You can still mark the damp on it.'); renderSitePlan(); return; }
+    SITEPLAN.rooms=rooms; SITEPLAN.roomSeq=rooms.length+1; SITEPLAN.planTotal=(data.total||''); renderSitePlan();
+    toast(rooms.length+' rooms traced'+(SITEPLAN.planTotal?', '+SITEPLAN.planTotal+' total':'')+'.');
   }).catch(function(err){
     var msg=(err&&err.message)?String(err.message):'';
     if(gotReply){
@@ -2244,7 +2237,7 @@ function renderSitePlan(){
   /* Entry choice: Polycam import vs custom builder. */
   if(!sp.planSource){
     mt.innerHTML='<div class="sp-choose">'+
-      '<button class="sp-choicecard" onclick="spChoosePlan(\'polycam\')"><div class="cc-ic">📐</div><div class="cc-t">Upload floor plan from Polycam</div><div class="cc-s">Bring in a scanned plan. The rooms and measurements are read in automatically, so you just mark the damp, readings and photos.</div><div class="cc-go">Import scan →</div></button>'+
+      '<button class="sp-choicecard" onclick="spChoosePlan(\'polycam\')"><div class="cc-ic">📐</div><div class="cc-t">Upload floor plan from Polycam</div><div class="cc-s">Bring in a scanned plan, tap Read &amp; trace rooms to pull the rooms and measurements off it, crop if you want, then mark the damp, readings and photos.</div><div class="cc-go">Import scan →</div></button>'+
       '<button class="sp-choicecard" onclick="spChoosePlan(\'custom\')"><div class="cc-ic">✏️</div><div class="cc-t">Custom floor plan</div><div class="cc-s">Build the plan yourself. Draw rooms, walls and fixtures, name them and arrange them, then mark the damp.</div><div class="cc-go">Build it →</div></button>'+
     '</div>';
     return;
@@ -2253,7 +2246,7 @@ function renderSitePlan(){
   var src='<div class="sp-src">'+
     '<div class="sp-srcgrp"><span class="miniLbl" style="margin:0">Plan</span>'+
       (sp.planSource==='polycam'
-        ? '<button class="btn ghost sm" onclick="spImportPolycam()">⤒ Upload Polycam plan</button>'+(sp.traceImg?'<button class="btn slate sm" onclick="spStartCrop()">✂ Crop plan</button>'+(sp.traceImgOrig&&sp.traceImg!==sp.traceImgOrig?'<button class="btn ghost sm" onclick="spResetCrop()">Reset crop</button>':''):'')
+        ? '<button class="btn ghost sm" onclick="spImportPolycam()">⤒ Upload Polycam plan</button>'+(sp.traceImg?'<button class="btn slate sm" onclick="spReadRoomsBtn()">✨ Read &amp; trace rooms</button><button class="btn ghost sm" onclick="spStartCrop()">✂ Crop</button>'+(sp.traceImgOrig&&sp.traceImg!==sp.traceImgOrig?'<button class="btn ghost sm" onclick="spResetCrop()">Reset crop</button>':''):'')
         : '<button class="btn ghost sm" onclick="uploadPlan()">⤒ Upload floor plan</button>'+
           (sp.traceImg?'<button class="btn ghost sm" onclick="spRebuildRoomsAI()">✨ Auto-detect rooms (AI)</button><button class="btn ghost sm" onclick="spClearTrace()">Remove background</button>':'')+
           (sp.planType==='imported'?'<button class="btn slate sm" onclick="spTraceRooms()">✏️ Trace into rooms</button>':''))+
@@ -2263,12 +2256,13 @@ function renderSitePlan(){
   '</div>';
   /* rooms manager (only when building from rooms, not an imported image) */
   var roomsBar='';
-  if(sp.planType==='rooms' && sp.planSource!=='polycam'){
+  if(sp.planType==='rooms'){
     var isPoly=sp.planSource==='polycam';
-    var chips=sp.rooms.map(function(r){ return '<span class="sp-roomchip"><input class="sp-roomname" value="'+String(r.name).replace(/"/g,'&quot;')+'" onchange="spRenameRoom('+r.id+',this.value)"><button class="sp-roomdel" title="Delete room" onclick="spDelRoom('+r.id+')">×</button></span>'; }).join('');
+    var chips=sp.rooms.map(function(r,idx){ return '<span class="sp-roomchip"><span style="font-weight:700;color:#1F8385;margin-right:2px">'+(idx+1)+'</span><input class="sp-roomname" value="'+String(r.name).replace(/"/g,'&quot;')+'" onchange="spRenameRoom('+r.id+',this.value)">'+(r.roomArea?'<span style="font-size:11px;color:#1F8385;font-weight:600;margin:0 2px">'+spEsc(r.roomArea)+'</span>':'')+'<button class="sp-roomdel" title="Delete room" onclick="spDelRoom('+r.id+')">×</button></span>'; }).join('');
     var addBtns=isPoly ? '' : SP_ROOMSHAPES.map(function(rs){ return '<button class="btn ghost sm sp-addroom" onclick="spAddRoom(\''+rs.id+'\')">'+rs.label+'</button>'; }).join('');
-    var emptyHint=(isPoly && !sp.rooms.length) ? '<span class="sp-hint" style="margin:0">'+(sp.traceImg?'Tap “Read rooms &amp; measurements” above to pull the rooms off your plan.':'Upload your Polycam plan above.')+'</span>' : '';
-    roomsBar='<div class="sp-toolbar"><div class="sp-picktitle">'+(isPoly?'Rooms read from the plan':'Rooms &amp; layout')+'</div><div class="sp-roomlist">'+chips+addBtns+emptyHint+'</div></div>';
+    var emptyHint=(isPoly && !sp.rooms.length) ? '<span class="sp-hint" style="margin:0">'+(sp.traceImg?'Tap “Read &amp; trace rooms” above to trace the rooms off your plan.':'Upload your Polycam plan above.')+'</span>' : '';
+    var title=isPoly?('Rooms traced from the plan'+(sp.planTotal?' · '+spEsc(sp.planTotal)+' total':'')):'Rooms &amp; layout';
+    roomsBar='<div class="sp-toolbar"><div class="sp-picktitle">'+title+'</div><div class="sp-roomlist">'+chips+addBtns+emptyHint+'</div></div>';
   }
   /* toolbar: modes + (for damp) surface selector + type picker */
   var modes=[['move','✥','Arrange'],['room','▭','Rooms'],['damp','⚠','Damp'],['reading','💧','Reading'],['photo','📷','Photo']];
