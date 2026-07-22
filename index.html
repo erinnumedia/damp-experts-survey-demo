@@ -1797,6 +1797,12 @@ function spHitDraggable(x,y){
 }
 function spPointerDown(e){
   var sp=SITEPLAN;
+  if(sp.mode==='crop'){
+    e.preventDefault(); var cp=spEvtXY(e); sp.draw={x1:cp.x,y1:cp.y,x2:cp.x,y2:cp.y,_crop:true};
+    var pcr=document.getElementById('spPreviewR'); if(pcr){ pcr.setAttribute('stroke','#0ea5e9'); pcr.setAttribute('stroke-dasharray','6 4'); pcr.setAttribute('fill','#0ea5e9'); pcr.setAttribute('fill-opacity','0.12'); pcr.setAttribute('x',cp.x);pcr.setAttribute('y',cp.y);pcr.setAttribute('width',0);pcr.setAttribute('height',0); pcr.style.display='block'; }
+    try{ e.target.setPointerCapture&&e.target.setPointerCapture(e.pointerId); }catch(_){}
+    return;
+  }
   if(sp.mode==='move'){
     var mp=spEvtXY(e);
     var rh=spResizeHandleAt(mp.x,mp.y);
@@ -1842,6 +1848,7 @@ function spPointerMove(e){
   }
   if(sp.drag){ var mp=spEvtXY(e); if(sp.drag.el) sp.drag.el.setAttribute('transform','translate('+(mp.x-sp.drag.ptrX)+','+(mp.y-sp.drag.ptrY)+')'); return; }
   if(!sp.draw) return; var p=spEvtXY(e); sp.draw.x2=p.x; sp.draw.y2=p.y;
+  if(sp.draw._crop){ var pcr=document.getElementById('spPreviewR'); if(pcr){ pcr.setAttribute('x',Math.min(sp.draw.x1,p.x));pcr.setAttribute('y',Math.min(sp.draw.y1,p.y));pcr.setAttribute('width',Math.abs(p.x-sp.draw.x1));pcr.setAttribute('height',Math.abs(p.y-sp.draw.y1)); } return; }
   if(sp.draw._tool){ return; }
   if(sp.draw._room==='line'){ var pvl=document.getElementById('spPreview'); if(pvl){ pvl.setAttribute('x2',p.x); pvl.setAttribute('y2',p.y); } return; }
   if(sp.draw._room==='rect'){ var prm=document.getElementById('spPreviewR'); if(prm){ prm.setAttribute('x',Math.min(sp.draw.x1,p.x));prm.setAttribute('y',Math.min(sp.draw.y1,p.y));prm.setAttribute('width',Math.abs(p.x-sp.draw.x1));prm.setAttribute('height',Math.abs(p.y-sp.draw.y1)); } return; }
@@ -1850,6 +1857,13 @@ function spPointerMove(e){
 }
 function spPointerUp(e){
   var sp=SITEPLAN;
+  if(sp.mode==='crop'&&sp.draw&&sp.draw._crop){
+    var cd=sp.draw; sp.draw=null;
+    var cx=Math.min(cd.x1,cd.x2),cy=Math.min(cd.y1,cd.y2),cw=Math.abs(cd.x2-cd.x1),ch=Math.abs(cd.y2-cd.y1);
+    var pcr=document.getElementById('spPreviewR'); if(pcr){ pcr.style.display='none'; pcr.setAttribute('stroke-dasharray','0'); }
+    if(cw>20&&ch>20){ spApplyCrop(cx,cy,cw,ch); } else { sp.mode='damp'; renderSitePlan(); toast('Crop cancelled, drag a bigger box next time.'); }
+    return;
+  }
   if(sp.resize){ sp.resize=null; renderSitePlan(); return; }
   if(sp.drag){
     var g=sp.drag, mp=spEvtXY(e), dx=mp.x-g.ptrX, dy=mp.y-g.ptrY;
@@ -2141,14 +2155,37 @@ function spChoosePlan(src){
    and measurements off it. No invented rooms. */
 function spImportPolycam(){
   var sp=SITEPLAN; sp.planSource='polycam'; sp.planType='rooms';
-  sp.rooms=[]; sp.roomSeq=1; sp.walls=[]; sp.elements=[]; sp.issues=[]; sp.readings=[]; sp.photos=[]; sp.seq=1; sp.elSeq=1; sp.mode='damp'; sp.selType=null; sp.traceImg=null; sp.traceW=null; sp.traceH=null; sp.tracedClean=false; sp.planTotal='';
+  sp.rooms=[]; sp.roomSeq=1; sp.walls=[]; sp.elements=[]; sp.issues=[]; sp.readings=[]; sp.photos=[]; sp.seq=1; sp.elSeq=1; sp.mode='damp'; sp.selType=null; sp.traceImg=null; sp.traceW=null; sp.traceH=null; sp.tracedClean=false; sp.planTotal=''; sp.traceImgOrig=null;
   renderSitePlan();
   pickImage(function(dataUrl){
     if(!dataUrl){ return; }
     var im=new Image();
-    im.onload=function(){ var ar=(im.naturalWidth&&im.naturalHeight)?(im.naturalHeight/im.naturalWidth):0.8; sp.traceW=400; sp.traceH=Math.max(240,Math.min(1000,Math.round(400*ar))); sp.traceImg=dataUrl; renderSitePlan(); spReadPolycamRooms(); };
-    im.onerror=function(){ sp.traceImg=dataUrl; renderSitePlan(); spReadPolycamRooms(); };
+    im.onload=function(){ var ar=(im.naturalWidth&&im.naturalHeight)?(im.naturalHeight/im.naturalWidth):0.8; sp.traceW=400; sp.traceH=Math.max(240,Math.min(1200,Math.round(400*ar))); sp.traceImg=dataUrl; sp.traceImgOrig=dataUrl; sp.traceWOrig=sp.traceW; sp.traceHOrig=sp.traceH; renderSitePlan(); };
+    im.onerror=function(){ sp.traceImg=dataUrl; sp.traceImgOrig=dataUrl; renderSitePlan(); };
     im.src=dataUrl;
+  });
+}
+/* Manual crop: enter crop mode, drag a box, it applies with marks kept fixed to the plan. */
+function spStartCrop(){ if(!SITEPLAN.traceImg){ toast('Upload a plan first'); return; } SITEPLAN.mode='crop'; renderSitePlan(); toast('Drag a box around the part of the plan you want to keep.'); }
+function spResetCrop(){ var sp=SITEPLAN; if(!sp.traceImgOrig){ toast('Nothing to reset'); return; } sp.traceImg=sp.traceImgOrig; sp.traceW=sp.traceWOrig||400; sp.traceH=sp.traceHOrig||320; renderSitePlan(); toast('Crop reset to the full plan.'); }
+function spApplyCrop(cx,cy,cw,ch){
+  var sp=SITEPLAN; if(!sp.traceImg){ return; }
+  var wld=spWorld(), W=wld.w, H=wld.h;
+  spBusy(true,'Cropping…');
+  spCropImage(sp.traceImg, {x:cx/W, y:cy/H, w:cw/W, h:ch/H}).then(function(cr){
+    spBusy(false);
+    if(!cr.cropped){ toast('Could not crop that area, try again.'); sp.mode='damp'; renderSitePlan(); return; }
+    var newW=400, newH=Math.max(160,Math.round(400*(cr.h/cr.w))), sx=newW/cw, sy=newH/ch;
+    function tx(x){ return Math.round((x-cx)*sx); } function ty(y){ return Math.round((y-cy)*sy); }
+    (sp.issues||[]).forEach(function(o){ if(o.kind==='rect'){ o.x=tx(o.x);o.y=ty(o.y);o.w=Math.round(o.w*sx);o.h=Math.round(o.h*sy); } else { o.x1=tx(o.x1);o.y1=ty(o.y1);o.x2=tx(o.x2);o.y2=ty(o.y2); } });
+    (sp.readings||[]).forEach(function(o){ o.x=tx(o.x);o.y=ty(o.y); });
+    (sp.photos||[]).forEach(function(o){ o.x=tx(o.x);o.y=ty(o.y); });
+    (sp.walls||[]).forEach(function(o){ o.x1=tx(o.x1);o.y1=ty(o.y1);o.x2=tx(o.x2);o.y2=ty(o.y2); });
+    (sp.elements||[]).forEach(function(o){ o.x=tx(o.x);o.y=ty(o.y);o.w=Math.round(o.w*sx);o.h=Math.round(o.h*sy); });
+    (sp.rooms||[]).forEach(function(r){ if(r.poly) r.poly=r.poly.map(function(p){return [tx(p[0]),ty(p[1])];}); r.x=tx(r.x);r.y=ty(r.y);r.w=Math.round(r.w*sx);r.h=Math.round(r.h*sy); });
+    sp.traceImg=cr.dataUrl; sp.traceW=newW; sp.traceH=newH; sp.mode='damp';
+    renderSitePlan();
+    toast('Cropped. Your marks stay fixed to the plan.');
   });
 }
 /* Read the real rooms + printed measurements off the uploaded plan with AI vision. */
@@ -2216,7 +2253,7 @@ function renderSitePlan(){
   var src='<div class="sp-src">'+
     '<div class="sp-srcgrp"><span class="miniLbl" style="margin:0">Plan</span>'+
       (sp.planSource==='polycam'
-        ? '<button class="btn ghost sm" onclick="spImportPolycam()">⤒ Upload Polycam plan</button>'+(sp.traceImg?'<button class="btn slate sm" onclick="spReadRoomsBtn()">✨ Read rooms &amp; measurements</button>':'')
+        ? '<button class="btn ghost sm" onclick="spImportPolycam()">⤒ Upload Polycam plan</button>'+(sp.traceImg?'<button class="btn slate sm" onclick="spStartCrop()">✂ Crop plan</button>'+(sp.traceImgOrig&&sp.traceImg!==sp.traceImgOrig?'<button class="btn ghost sm" onclick="spResetCrop()">Reset crop</button>':''):'')
         : '<button class="btn ghost sm" onclick="uploadPlan()">⤒ Upload floor plan</button>'+
           (sp.traceImg?'<button class="btn ghost sm" onclick="spRebuildRoomsAI()">✨ Auto-detect rooms (AI)</button><button class="btn ghost sm" onclick="spClearTrace()">Remove background</button>':'')+
           (sp.planType==='imported'?'<button class="btn slate sm" onclick="spTraceRooms()">✏️ Trace into rooms</button>':''))+
@@ -2226,7 +2263,7 @@ function renderSitePlan(){
   '</div>';
   /* rooms manager (only when building from rooms, not an imported image) */
   var roomsBar='';
-  if(sp.planType==='rooms'){
+  if(sp.planType==='rooms' && sp.planSource!=='polycam'){
     var isPoly=sp.planSource==='polycam';
     var chips=sp.rooms.map(function(r){ return '<span class="sp-roomchip"><input class="sp-roomname" value="'+String(r.name).replace(/"/g,'&quot;')+'" onchange="spRenameRoom('+r.id+',this.value)"><button class="sp-roomdel" title="Delete room" onclick="spDelRoom('+r.id+')">×</button></span>'; }).join('');
     var addBtns=isPoly ? '' : SP_ROOMSHAPES.map(function(rs){ return '<button class="btn ghost sm sp-addroom" onclick="spAddRoom(\''+rs.id+'\')">'+rs.label+'</button>'; }).join('');
@@ -2246,6 +2283,8 @@ function renderSitePlan(){
       : tool==='erase' ? 'Tap any room, wall or fixture to delete it.'
       : 'Tap the plan to drop a '+tool+', then drag it into place with Arrange.';
     picker+='<div class="sp-hint">'+(sp.traceImg?'Tracing the uploaded plan underneath. ':'')+rhint+'</div>';
+  } else if(sp.mode==='crop'){
+    picker='<div class="sp-card">✂ <b>Crop the plan.</b> Drag a box around the part you want to keep. Everything outside it (logos, title, compass) is trimmed off, and your marks stay fixed to the plan. <button class="btn ghost sm" style="margin-left:8px" onclick="spSetMode(\'damp\')">Cancel</button></div>';
   } else if(sp.mode==='move'){
     picker=(sp.planType==='imported')
       ? '<div class="sp-card">✥ This is an imported plan <b>image</b>, so the rooms are part of the picture and can’t be moved. Drag your readings and photo points to reposition them. To get editable rooms you can arrange, use <b>Build with rooms</b>, or rebuild the image into rooms.</div>'
