@@ -2133,6 +2133,7 @@ function spReadPolycamRooms(){
   var img=SITEPLAN.traceImg; if(!img){ return; }
   toast('Reading the rooms and measurements off your plan…');
   var wld=(typeof spWorld==='function')?spWorld():{w:400,h:320};
+  var gotReply=false;
   rasterToBase64(img).then(function(b64){
     return nuAI({
       system:'You read property floor plans and return only strict JSON.',
@@ -2140,6 +2141,7 @@ function spReadPolycamRooms(){
       image:{media_type:'image/png',data:b64}, max_tokens:3000
     });
   }).then(function(txt){
+    gotReply=true;
     var m=txt.match(/\{[\s\S]*\}/); var data=JSON.parse(m?m[0]:txt);
     var rooms=(data.rooms||[]).map(function(r,i){
       var pts=(r.points||[]).filter(function(p){return p&&p.length>=2;}).map(function(p){ return [Math.round((p[0]||0)*wld.w), Math.round((p[1]||0)*wld.h)]; });
@@ -2154,8 +2156,13 @@ function spReadPolycamRooms(){
     if(!rooms.length){ toast('No rooms could be read from the plan. You can still mark the damp on it.'); return; }
     SITEPLAN.rooms=rooms; SITEPLAN.roomSeq=rooms.length+1; renderSitePlan();
     toast(rooms.length+' rooms read from your plan with their measurements.');
-  }).catch(function(){
-    toast('Reading rooms needs your Claude key set in Netlify. Your plan is loaded, mark the damp on it for now.');
+  }).catch(function(err){
+    if(gotReply){
+      toast('The AI read your plan but the room shapes came back unreadable. Tap “Read rooms & measurements” to try again.');
+    } else {
+      var msg=(err&&err.message)?String(err.message):'';
+      toast('Could not reach the AI reader'+(msg?' ('+msg+')':'')+'. Check you are on the live Netlify site and the latest deploy has finished, then try again. Your plan is loaded either way.');
+    }
   });
 }
 function spReadRoomsBtn(){ if(!SITEPLAN.traceImg){ toast('Upload a plan first'); return; } spReadPolycamRooms(); }
