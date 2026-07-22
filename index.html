@@ -1429,9 +1429,9 @@ function planSVG(){
   /* Pull the plan through from Stage 3: the same rooms the surveyor set up. */
   if(typeof SITEPLAN!=='undefined' && (SITEPLAN.planType==='rooms'||SITEPLAN.traceImg) && typeof spLayoutRooms==='function'){
     var wld=(typeof spWorld==='function')?spWorld():{w:400,h:320};
-    var poly=SITEPLAN.planSource==='polycam';
+    var poly=SITEPLAN.planSource==='polycam' && !SITEPLAN.tracedClean;
     var bg='<rect width="'+wld.w+'" height="'+wld.h+'" fill="#F3F6F6"/>';
-    if(SITEPLAN.traceImg) bg+='<image href="'+SITEPLAN.traceImg+'" x="0" y="0" width="'+wld.w+'" height="'+wld.h+'" preserveAspectRatio="xMidYMid meet" opacity="'+(poly?0.95:0.5)+'"/>';
+    if(SITEPLAN.traceImg && !SITEPLAN.tracedClean) bg+='<image href="'+SITEPLAN.traceImg+'" x="0" y="0" width="'+wld.w+'" height="'+wld.h+'" preserveAspectRatio="xMidYMid meet" opacity="0.95"/>';
     var rfill=poly?'none':'#fff', rstroke=poly?'#1F8385':'#C4CFD0', body='';
     spLayoutRooms().forEach(function(r){
       if(r.shape==='chimney'){ var cs=Math.min(r.w,r.h)*0.62, cx=r.x+(r.w-cs)/2, cy=r.y+(r.h-cs)/2;
@@ -1500,7 +1500,7 @@ function AREAS(){
   if(isMarkerDriven()){
     return (SITEPLAN.rooms||[]).filter(function(r){return r.shape!=='chimney';}).map(function(r){
       if(!r.area) r.area={access:'Fully accessible',accessNote:''};
-      return {name:r.name,code:spInitials(r.name),kind:'defect',access:r.area.access,accessNote:r.area.accessNote,ch:r.ch||'',dims:r.dims||'',_room:r};
+      return {name:r.name,code:spInitials(r.name),kind:'defect',access:r.area.access,accessNote:r.area.accessNote,ch:r.ch||'',dims:(r.roomArea||r.dims||''),_room:r};
     });
   }
   return surveyType==='damp' ? DAMP_AREAS : TIMBER_AREAS;
@@ -1906,8 +1906,10 @@ function spSVG(){
     s+='<defs><pattern id="spgrid" width="20" height="20" patternUnits="userSpaceOnUse"><path d="M 20 0 L 0 0 0 20" fill="none" stroke="#e5e7eb" stroke-width="0.5"/></pattern>'+
        '<pattern id="spceil" width="7" height="7" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="7" stroke="#0f172a" stroke-width="1.3" stroke-opacity="0.3"/></pattern></defs>';
     s+='<rect x="0" y="0" width="'+wld.w+'" height="'+wld.h+'" fill="url(#spgrid)"/>';
-    if(sp.traceImg) s+='<image href="'+sp.traceImg+'" x="0" y="0" width="'+wld.w+'" height="'+wld.h+'" preserveAspectRatio="xMidYMid meet" opacity="'+(sp.planSource==='polycam'?0.95:0.45)+'"/>';
+    if(sp.traceImg && !sp.tracedClean) s+='<image href="'+sp.traceImg+'" x="0" y="0" width="'+wld.w+'" height="'+wld.h+'" preserveAspectRatio="xMidYMid meet" opacity="'+(sp.planSource==='polycam'?0.95:0.45)+'"/>';
+    var spOutlineOnly=(sp.planSource==='polycam' && !sp.tracedClean);
     spLayoutRooms().forEach(function(r){
+      var rMeasure=(r.roomArea||r.dims||'');
       s+='<g id="sproom-'+r.id+'" class="sp-groom">';
       if(r.shape==='chimney'){
         var cs=Math.min(r.w,r.h)*0.62, cx=r.x+(r.w-cs)/2, cy=r.y+(r.h-cs)/2;
@@ -1919,13 +1921,13 @@ function spSVG(){
         s+='<polygon points="'+pts.map(function(p){return Math.round(p[0])+','+Math.round(p[1]);}).join(' ')+'" fill="#fff" stroke="#334155" stroke-width="2.5" stroke-linejoin="round"/>';
         s+=spRoomLabelSVG(r.name, r.x+r.w*0.32, r.y+r.h*0.72, r.w*0.62);
       } else if(r.shape==='poly'){
-        s+='<polygon points="'+r.poly.map(function(p){return p[0]+','+p[1];}).join(' ')+'" fill="'+(sp.planSource==='polycam'?'none':'#fff')+'" stroke="'+(sp.planSource==='polycam'?'#1F8385':'#334155')+'" stroke-width="2.5" stroke-linejoin="round"/>';
-        s+=spRoomLabelSVG(r.name, r.x+r.w/2, r.y+r.h/2-(r.dims?7:0), r.w);
-        if(r.dims) s+='<text x="'+(r.x+r.w/2)+'" y="'+(r.y+r.h/2+10)+'" text-anchor="middle" font-size="10" fill="#94a3b8">'+spEsc(r.dims)+'</text>';
+        s+='<polygon points="'+r.poly.map(function(p){return p[0]+','+p[1];}).join(' ')+'" fill="'+(spOutlineOnly?'none':'#fff')+'" stroke="'+(spOutlineOnly?'#1F8385':'#334155')+'" stroke-width="2.5" stroke-linejoin="round"/>';
+        s+=spRoomLabelSVG(r.name, r.x+r.w/2, r.y+r.h/2-(rMeasure?7:0), r.w);
+        if(rMeasure) s+='<text x="'+(r.x+r.w/2)+'" y="'+(r.y+r.h/2+10)+'" text-anchor="middle" font-size="10" font-weight="600" fill="#1F8385">'+spEsc(rMeasure)+'</text>';
       } else {
-        s+='<rect x="'+r.x+'" y="'+r.y+'" width="'+r.w+'" height="'+r.h+'" rx="3" fill="'+(sp.planSource==='polycam'?'none':'#fff')+'" stroke="'+(sp.planSource==='polycam'?'#1F8385':'#334155')+'" stroke-width="2.5"/>';
-        s+=spRoomLabelSVG(r.name, r.x+r.w/2, r.y+r.h/2-(r.dims?7:0), r.w);
-        if(r.dims) s+='<text x="'+(r.x+r.w/2)+'" y="'+(r.y+r.h/2+10)+'" text-anchor="middle" font-size="10" fill="#94a3b8">'+spEsc(r.dims)+'</text>';
+        s+='<rect x="'+r.x+'" y="'+r.y+'" width="'+r.w+'" height="'+r.h+'" rx="3" fill="'+(spOutlineOnly?'none':'#fff')+'" stroke="'+(spOutlineOnly?'#1F8385':'#334155')+'" stroke-width="2.5"/>';
+        s+=spRoomLabelSVG(r.name, r.x+r.w/2, r.y+r.h/2-(rMeasure?7:0), r.w);
+        if(rMeasure) s+='<text x="'+(r.x+r.w/2)+'" y="'+(r.y+r.h/2+10)+'" text-anchor="middle" font-size="10" font-weight="600" fill="#1F8385">'+spEsc(rMeasure)+'</text>';
         if(sp.mode==='move'){ [[r.x,r.y,'nwse'],[r.x+r.w,r.y,'nesw'],[r.x,r.y+r.h,'nesw'],[r.x+r.w,r.y+r.h,'nwse'],[r.x+r.w/2,r.y,'ns'],[r.x+r.w/2,r.y+r.h,'ns'],[r.x+r.w,r.y+r.h/2,'ew'],[r.x,r.y+r.h/2,'ew']].forEach(function(p){ s+='<circle cx="'+p[0]+'" cy="'+p[1]+'" r="4.5" fill="#fff" stroke="#1F8385" stroke-width="1.8" class="sp-handle" style="cursor:'+p[2]+'-resize"/>'; }); }
       }
       s+='</g>';
@@ -2118,7 +2120,7 @@ function spChoosePlan(src){
    and measurements off it. No invented rooms. */
 function spImportPolycam(){
   var sp=SITEPLAN; sp.planSource='polycam'; sp.planType='rooms';
-  sp.rooms=[]; sp.roomSeq=1; sp.walls=[]; sp.elements=[]; sp.issues=[]; sp.readings=[]; sp.photos=[]; sp.seq=1; sp.elSeq=1; sp.mode='damp'; sp.selType=null; sp.traceImg=null; sp.traceW=null; sp.traceH=null;
+  sp.rooms=[]; sp.roomSeq=1; sp.walls=[]; sp.elements=[]; sp.issues=[]; sp.readings=[]; sp.photos=[]; sp.seq=1; sp.elSeq=1; sp.mode='damp'; sp.selType=null; sp.traceImg=null; sp.traceW=null; sp.traceH=null; sp.tracedClean=false; sp.planTotal='';
   renderSitePlan();
   pickImage(function(dataUrl){
     if(!dataUrl){ return; }
@@ -2137,7 +2139,7 @@ function spReadPolycamRooms(){
   rasterToBase64(img).then(function(b64){
     return nuAI({
       system:'You read property floor plans and return only strict JSON.',
-      prompt:'This is a property floor plan image. For each labelled room, TRACE the outline of its walls as an ordered list of corner points going clockwise around the room. Return ONLY JSON: {"rooms":[{"name":"Living Room","dims":"3.2 × 4.1m","points":[[0.10,0.20],[0.40,0.20],[0.40,0.35],[0.46,0.35],[0.46,0.55],[0.10,0.55]]}]} where name is the printed room label, dims is the printed size if shown (else ""), and points are [x,y] fractions (0-1) of the whole image for every corner of that room\'s wall outline, in order around the room. Follow the real shape exactly: trace bay windows, alcoves, chimney breasts, angled walls and L-shapes as extra points, do NOT simplify a room to a rectangle. Use 4 points for a plain rectangular room and up to ~16 for complex ones. No commentary.',
+      prompt:'This is a property floor plan image. For each labelled room: read its printed NAME, read its printed floor AREA (e.g. "5.5 m²"), read its printed width × length DIMS if shown, and TRACE the outline of its walls as an ordered list of corner points going clockwise. Also read the TOTAL floor area if printed anywhere. Return ONLY JSON: {"total":"44 m²","rooms":[{"name":"Living Room","area":"11 m²","dims":"3.2 × 4.1 m","points":[[0.10,0.20],[0.40,0.20],[0.40,0.35],[0.46,0.35],[0.46,0.55],[0.10,0.55]]}]} where area is the printed area (else ""), dims is the printed size (else ""), and points are [x,y] fractions (0-1) of the whole image for every corner of that room\'s wall outline, in order. Read every measurement EXACTLY as printed, these are used for quoting. Trace bay windows, alcoves, chimney breasts, angled walls and L-shapes as extra points, do NOT simplify a room to a rectangle. No commentary.',
       image:{media_type:'image/png',data:b64}, max_tokens:3000, noThink:true
     });
   }).then(function(txt){
@@ -2147,15 +2149,15 @@ function spReadPolycamRooms(){
       var pts=(r.points||[]).filter(function(p){return p&&p.length>=2;}).map(function(p){ return [Math.round((p[0]||0)*wld.w), Math.round((p[1]||0)*wld.h)]; });
       if(pts.length<3){ // fall back to a plain box if it couldn't trace this one
         var bx=Math.round((r.x||0.1)*wld.w), by=Math.round((r.y||0.1)*wld.h), bw=Math.max(30,Math.round((r.w||0.2)*wld.w)), bh=Math.max(30,Math.round((r.h||0.2)*wld.h));
-        return {id:i+1,name:(r.name||('Room '+(i+1))),dims:(r.dims||''),shape:'rect',x:bx,y:by,w:bw,h:bh};
+        return {id:i+1,name:(r.name||('Room '+(i+1))),roomArea:(r.area||''),dims:(r.dims||''),shape:'rect',x:bx,y:by,w:bw,h:bh};
       }
       var xs=pts.map(function(p){return p[0];}), ys=pts.map(function(p){return p[1];});
       var minx=Math.min.apply(null,xs), miny=Math.min.apply(null,ys), maxx=Math.max.apply(null,xs), maxy=Math.max.apply(null,ys);
-      return {id:i+1,name:(r.name||('Room '+(i+1))),dims:(r.dims||''),shape:'poly',poly:pts,x:minx,y:miny,w:Math.max(20,maxx-minx),h:Math.max(20,maxy-miny)};
+      return {id:i+1,name:(r.name||('Room '+(i+1))),roomArea:(r.area||''),dims:(r.dims||''),shape:'poly',poly:pts,x:minx,y:miny,w:Math.max(20,maxx-minx),h:Math.max(20,maxy-miny)};
     });
     if(!rooms.length){ toast('No rooms could be read from the plan. You can still mark the damp on it.'); return; }
-    SITEPLAN.rooms=rooms; SITEPLAN.roomSeq=rooms.length+1; renderSitePlan();
-    toast(rooms.length+' rooms read from your plan with their measurements.');
+    SITEPLAN.rooms=rooms; SITEPLAN.roomSeq=rooms.length+1; SITEPLAN.planTotal=(data.total||''); SITEPLAN.tracedClean=true; renderSitePlan();
+    toast(rooms.length+' rooms read'+(SITEPLAN.planTotal?', '+SITEPLAN.planTotal+' total':'')+'. Measurements pulled straight from your plan.');
   }).catch(function(err){
     var msg=(err&&err.message)?String(err.message):'';
     if(gotReply){
