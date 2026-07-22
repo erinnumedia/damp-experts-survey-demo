@@ -1,0 +1,9 @@
+{
+  "name": "damp-experts-survey-demo",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Damp Experts Group survey-to-report app. Static front end + one Netlify function for secure Claude calls.",
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.68.0"
+  }
+}

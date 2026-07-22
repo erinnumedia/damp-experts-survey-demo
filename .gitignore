@@ -1,2 +1,12 @@
 # Local Netlify folder
 .netlify
+
+# Dependencies
+node_modules
+
+# Secrets / local env (NEVER commit the API key)
+.env
+.env.*
+
+# Local Claude tooling
+.claude

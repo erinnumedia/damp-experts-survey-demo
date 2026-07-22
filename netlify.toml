@@ -1,0 +1,15 @@
+# Netlify config for the Damp Experts survey app.
+# The site is static (index.html served as-is); the only server-side piece is the
+# functions directory, where the secure Claude calls live.
+
+[build]
+  publish = "."
+  functions = "netlify/functions"
+
+# Give the AI function room to think (Claude can take a few seconds on a full
+# report). Standard functions allow up to 26s; this asks for the max.
+[functions]
+  node_bundler = "esbuild"
+
+[functions."ai"]
+  timeout = 26
