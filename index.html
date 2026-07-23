@@ -914,12 +914,12 @@
         <div id="captureAreas"></div>
       </div>
 
-      <div class="actions"><button class="btn ghost" onclick="go(2)">← Back</button><div class="spacer"></div><button class="btn slate" onclick="go(4)">Generate report with AI →</button></div>
+      <div class="actions"><button class="btn ghost" onclick="go(2)">← Back</button><div class="spacer"></div><button class="btn slate" onclick="go(6)">Recommendations &amp; specifications →</button></div>
     </section>
 
     <!-- ===== 4 · AI GENERATION ===== -->
     <section class="screen" data-s="4">
-      <div class="eyebrow">Stage 5, AI drafting</div>
+      <div class="eyebrow">Stage 6, AI drafting</div>
       <h1 class="h-title">Building the report</h1>
       <p class="h-sub">Everything the surveyor captured is sent, server-side, to the Claude API, which turns the structured survey into a full report: key findings, professional opinions and a matched schedule of works, written in Damp Experts Group's own voice, learned from hundreds of past reports. The API key never touches the browser.</p>
       <div style="margin-top:8px">
@@ -950,12 +950,12 @@
           <div class="kv"><span class="k">Total</span><span class="v" style="color:var(--teal-deep)">£<span id="cTot">4,170</span></span></div>
         </div>
       </div>
-      <div class="actions"><button class="btn ghost" onclick="go(6)">← Back to specifications</button><div class="spacer"></div><button class="btn" onclick="go(8)">Review &amp; send →</button></div>
+      <div class="actions"><button class="btn ghost" onclick="go(5)">← Back to report</button><div class="spacer"></div><button class="btn" onclick="go(8)">Review &amp; send →</button></div>
     </section>
 
     <!-- ===== 5 · CLIENT REPORT ===== -->
     <section class="screen" data-s="5">
-      <div class="eyebrow">Stage 6, Client report</div>
+      <div class="eyebrow">Stage 7, Client report</div>
       <h1 class="h-title">The interactive report</h1>
       <p class="h-sub">What the client opens from their email. Numbered markers on their own plan, tap one to reveal the evidence, the diagnosis and the recommended fix. The whole report structure adapts to the survey type.</p>
 
@@ -963,7 +963,7 @@
 
       <div id="reportMount" style="margin-top:8px"></div>
 
-      <div class="actions"><button class="btn ghost" onclick="go(4)">← Back to drafting</button><div class="spacer"></div><button class="btn" onclick="go(6)">Recommendations &amp; specifications →</button></div>
+      <div class="actions"><button class="btn ghost" onclick="go(4)">← Back to drafting</button><div class="spacer"></div><button class="btn" onclick="go(7)">Quoted works →</button></div>
     </section>
 
     <!-- ===== 8 · REVIEW & SEND / CLIENT EMAIL ===== -->
@@ -1041,19 +1041,19 @@
 
     <!-- ===== 6 · RECOMMENDATIONS / SPECIFICATIONS ===== -->
     <section class="screen" data-s="6">
-      <div class="eyebrow">Stage 7, Recommendations &amp; specifications</div>
+      <div class="eyebrow">Stage 5, Recommendations &amp; specifications</div>
       <h1 class="h-title">Recommendations &amp; specifications</h1>
-      <p class="h-sub">Generated separately from the completed report. Claude reads the finished report and turns each recommended work into a detailed technical specification, the method, the materials and the standards behind it, then sequences them into a recommended plan of action.</p>
+      <p class="h-sub">Done before the report, so the report can include them. Claude reads the survey findings and the treatments marked on the plan, turns each recommended work into a detailed technical specification, the method, the materials and the standards behind it, then sequences them into a recommended plan of action.</p>
       <div style="margin-top:8px">
         <div class="genwrap">
-          <div class="miniLbl" style="text-align:center">Claude generates the specification from the completed report</div>
+          <div class="miniLbl" style="text-align:center">Claude generates the specification from the survey findings</div>
           <div class="genbar"><i id="specFill"></i></div>
           <div class="genlist" id="specList"></div>
           <button class="btn" id="specBtn" onclick="revealSpec()" style="margin-top:14px;display:none">View specification &amp; plan →</button>
         </div>
       </div>
       <div id="specMount" style="margin-top:22px;display:none"></div>
-      <div class="actions"><button class="btn ghost" onclick="go(5)">← Back to report</button><div class="spacer"></div><button class="btn" onclick="go(7)">Quoted works →</button></div>
+      <div class="actions"><button class="btn ghost" onclick="go(3)">← Back to on-site survey</button><div class="spacer"></div><button class="btn" onclick="go(4)">Generate report with AI →</button></div>
     </section>
 
   </main>
@@ -1495,9 +1495,9 @@ var rail=[
   {t:'CRM job',sub:'Client & appointment',s:1},
   {t:'Upload plan',sub:'From plan app',s:2},
   {t:'On-site survey',sub:'Structured capture',s:3},
+  {t:'Recommendations',sub:'Treatments & specs',s:6},
   {t:'AI drafting',sub:'Report generated',s:4},
   {t:'Client report',sub:'Interactive',s:5},
-  {t:'Recommendations',sub:'Specifications',s:6},
   {t:'Quoted works',sub:'Manual pricing',s:7},
   {t:'Review & send',sub:'Report · specs · price · email',s:8}
 ];
@@ -1517,8 +1517,10 @@ function go(i){
   if(!planStepOn() && i===2) i=3; /* site plan is Damp-only, and only if needed */
   cur=i;
   document.querySelectorAll('.screen').forEach(function(s){s.classList.toggle('on',+s.dataset.s===i);});
+  /* progress by RAIL POSITION (the step order no longer matches the internal numbers) */
+  var ord=railFor().map(function(r){return r.s;}), cp=ord.indexOf(i);
   document.querySelectorAll('.step').forEach(function(st){
-    var k=+st.dataset.i; st.classList.toggle('active',k===i); st.classList.toggle('done',k<i);
+    var k=+st.dataset.i, kp=ord.indexOf(k); st.classList.toggle('active',k===i); st.classList.toggle('done',cp>-1&&kp>-1&&kp<cp);
   });
   window.scrollTo({top:0,behavior:'smooth'});
   if(i===2){renderSitePlan();}
