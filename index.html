@@ -606,6 +606,15 @@
   /* ---------- Site plan annotator ---------- */
   .sp-src{display:flex;flex-wrap:wrap;gap:12px;justify-content:space-between;align-items:center;margin-bottom:14px}
   .sp-srcgrp{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+  .sp-floors{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:14px;padding-bottom:12px;border-bottom:1px solid var(--line)}
+  .sp-floortab{display:inline-flex;align-items:center;gap:2px;background:var(--paper);border:1px solid var(--line);border-radius:999px;padding:3px 6px 3px 12px;cursor:pointer;transition:.15s}
+  .sp-floortab.on{background:#0d4b4d;border-color:#0d4b4d}
+  .sp-floortab.on .sp-floorname{color:#fff}
+  .sp-floorlbl{font-size:12.5px;font-weight:600;color:var(--ink);padding:4px 2px}
+  .sp-floorname{border:0;background:transparent;font-family:inherit;font-size:12.5px;font-weight:700;color:#fff;width:auto;min-width:70px;max-width:160px;padding:4px 2px}
+  .sp-floordel{border:0;background:transparent;color:rgba(255,255,255,.75);font-size:15px;line-height:1;cursor:pointer;padding:0 4px}
+  .sp-floortab:not(.on) .sp-floordel{color:var(--muted)}
+  .sp-addfloor{border-style:dashed}
   .sp-tpl{width:auto;min-width:150px;padding:8px 10px}
   .sp-soon{opacity:.6;cursor:not-allowed}
   .sp-wrap{display:grid;grid-template-columns:230px minmax(0,1fr) 210px;gap:14px;background:#0f172a;border-radius:16px;padding:14px;align-items:start}
@@ -1395,20 +1404,25 @@ function D(){return DATA[surveyType];}
    persistent finding object (m.f) so anything you fill out in the survey sticks.
    Empty plan -> no findings -> nothing shows on the survey. */
 function planFindings(){
-  var wld=(typeof spWorld==='function')?spWorld():{w:400,h:320};
-  return (SITEPLAN.issues||[]).map(function(m,i){
-    if(!m.f) m.f={};
-    var f=m.f, cx, cy;
-    if(m.kind==='rect'){ cx=m.x+m.w/2; cy=m.y+m.h/2; } else { cx=(m.x1+m.x2)/2; cy=(m.y1+m.y2)/2; }
-    f.n=i+1; f.loc=m.room||'Unassigned';
-    if(f.type===undefined) f.type=spTypeLabel(m.type);
-    if(f.status===undefined) f.status='active';
-    f.note=m.note||'';
-    f.surface=m.surface;
-    f.x=Math.max(3,Math.min(97,Math.round(cx/wld.w*100)));
-    f.y=Math.max(3,Math.min(97,Math.round(cy/wld.h*100)));
-    return f;
+  spEnsureFloors(); spSaveActiveFloor();
+  var out=[], n=0, multi=(SITEPLAN.floors.length>1);
+  SITEPLAN.floors.forEach(function(fl){
+    var wld=spWorldOf(fl.state);
+    (fl.state.issues||[]).forEach(function(m){
+      if(!m.f) m.f={};
+      var f=m.f, cx, cy;
+      if(m.kind==='rect'){ cx=m.x+m.w/2; cy=m.y+m.h/2; } else { cx=(m.x1+m.x2)/2; cy=(m.y1+m.y2)/2; }
+      n++; f.n=n; f.loc=m.room||'Unassigned'; f.floor=fl.name; f.floorId=fl.id; f.multiFloor=multi;
+      if(f.type===undefined) f.type=spTypeLabel(m.type);
+      if(f.status===undefined) f.status='active';
+      f.note=m.note||'';
+      f.surface=m.surface;
+      f.x=Math.max(3,Math.min(97,Math.round(cx/wld.w*100)));
+      f.y=Math.max(3,Math.min(97,Math.round(cy/wld.h*100)));
+      out.push(f);
+    });
   });
+  return out;
 }
 function currentFindings(){ return isMarkerDriven()?planFindings():D().findings; }
 function spInitials(s){ var w=String(s||'').trim().split(/\s+/); return ((w[0]||'?')[0]+((w[1]||'')[0]||'')).toUpperCase(); }
@@ -1511,10 +1525,15 @@ function bookingType(){ setType(document.getElementById('bkType').value); }
    flow identical across timber and damp, which are both marker-driven. */
 function AREAS(){
   if(isMarkerDriven()){
-    return (SITEPLAN.rooms||[]).filter(function(r){return r.shape!=='chimney';}).map(function(r){
-      if(!r.area) r.area={access:'Fully accessible',accessNote:''};
-      return {name:r.name,code:spInitials(r.name),kind:'defect',access:r.area.access,accessNote:r.area.accessNote,ch:r.ch||'',dims:(r.roomArea||r.dims||''),_room:r};
+    spEnsureFloors(); spSaveActiveFloor();
+    var multi=(SITEPLAN.floors.length>1), out=[];
+    SITEPLAN.floors.forEach(function(fl){
+      (fl.state.rooms||[]).filter(function(r){return r.shape!=='chimney';}).forEach(function(r){
+        if(!r.area) r.area={access:'Fully accessible',accessNote:''};
+        out.push({name:r.name,code:spInitials(r.name),kind:'defect',access:r.area.access,accessNote:r.area.accessNote,ch:r.ch||'',dims:(r.roomArea||r.dims||''),floor:fl.name,floorId:fl.id,multiFloor:multi,_room:r});
+      });
     });
+    return out;
   }
   return surveyType==='damp' ? DAMP_AREAS : TIMBER_AREAS;
 }
@@ -1732,6 +1751,35 @@ var ROOM_W=150, ROOM_H=150, CH_SZ=52;
 /* Rooms now carry FIXED positions {x,y,w,h}. Nothing reflows when you add a room,
    so your marks and points stay exactly where you put them. Rearrange by dragging. */
 var SITEPLAN={planImg:null,planType:'rooms',rooms:[{id:1,name:'Room 1',shape:'rect',x:34,y:54,w:150,h:180},{id:2,name:'Room 2',shape:'rect',x:216,y:54,w:150,h:180}],roomSeq:3,walls:[],elements:[],elSeq:1,roomTool:'rect',issues:[],treatments:[],readings:[],photos:[],notes:'',mode:'move',surface:'wall',selType:null,seq:1,pending:null,draw:null,drag:null};
+/* ---- Multiple site plans (floors) ----
+   SITEPLAN always holds the ACTIVE floor's working data. Every floor's saved
+   state lives in SITEPLAN.floors; switching saves the current one and loads the
+   next. Findings and areas roll up across ALL floors, each labelled by floor. */
+var SP_FLOOR_KEYS=['planImg','planType','planSource','rooms','roomSeq','walls','elements','elSeq','roomTool','issues','readings','photos','notes','traceImg','traceW','traceH','traceImgOrig','traceWOrig','traceHOrig','tracedClean','planTotal','seq','surface','selType'];
+function spBlankFloorState(){ return {planImg:null,planType:'rooms',planSource:null,rooms:[],roomSeq:1,walls:[],elements:[],elSeq:1,roomTool:'rect',issues:[],readings:[],photos:[],notes:'',traceImg:null,traceW:null,traceH:null,traceImgOrig:null,traceWOrig:null,traceHOrig:null,tracedClean:false,planTotal:'',seq:1,surface:'wall',selType:null}; }
+function spSnapshotFloor(){ var o={}; SP_FLOOR_KEYS.forEach(function(k){ o[k]=SITEPLAN[k]; }); return o; }
+function spLoadFloorState(st){ SP_FLOOR_KEYS.forEach(function(k){ SITEPLAN[k]=st[k]; }); }
+function spEnsureFloors(){ if(!SITEPLAN.floors){ SITEPLAN.floors=[{id:1,name:'Ground Floor',state:spSnapshotFloor()}]; SITEPLAN.activeFloorId=1; SITEPLAN.floorSeq=2; } }
+function spFloorById(id){ var fs=SITEPLAN.floors||[]; for(var i=0;i<fs.length;i++) if(fs[i].id===id) return fs[i]; return null; }
+function spActiveFloor(){ spEnsureFloors(); return spFloorById(SITEPLAN.activeFloorId); }
+function spSaveActiveFloor(){ spEnsureFloors(); var fl=spFloorById(SITEPLAN.activeFloorId); if(fl) fl.state=spSnapshotFloor(); }
+function spWorldOf(st){ var W=st.traceW||400, H=st.traceH||320; (st.rooms||[]).forEach(function(r){ W=Math.max(W,r.x+r.w+20); H=Math.max(H,r.y+r.h+26); }); (st.readings||[]).concat(st.photos||[]).forEach(function(o){ W=Math.max(W,o.x+22); H=Math.max(H,o.y+28); }); return {w:Math.round(W),h:Math.round(H)}; }
+function spSwitchFloor(id){ if(id===SITEPLAN.activeFloorId) return; spSaveActiveFloor(); var fl=spFloorById(id); if(!fl) return; spLoadFloorState(fl.state); SITEPLAN.activeFloorId=id; SITEPLAN.mode='damp'; SITEPLAN.cropRect=null; SITEPLAN.cropDrag=null; SITEPLAN.draw=null; SITEPLAN.drag=null; renderSitePlan(); }
+function spDefaultFloorName(){ var names=['First Floor','Second Floor','Third Floor','Basement','Loft']; var used=(SITEPLAN.floors||[]).map(function(f){return f.name;}); for(var i=0;i<names.length;i++){ if(used.indexOf(names[i])<0) return names[i]; } return 'Floor '+((SITEPLAN.floors||[]).length+1); }
+function spAddFloor(){ spSaveActiveFloor(); var id=SITEPLAN.floorSeq++; var n=spDefaultFloorName(); SITEPLAN.floors.push({id:id,name:n,state:spBlankFloorState()}); spLoadFloorState(spFloorById(id).state); SITEPLAN.activeFloorId=id; SITEPLAN.mode='damp'; renderSitePlan(); toast('Added '+n+'. Upload or build its plan.'); }
+function spRenameFloor(id,name){ var fl=spFloorById(id); if(fl) fl.name=(name||'').trim()||fl.name; buildRail&&buildRail(); }
+function spDeleteFloor(id){ spEnsureFloors(); if(SITEPLAN.floors.length<=1){ toast('You need at least one plan.'); return; } var wasActive=(id===SITEPLAN.activeFloorId); SITEPLAN.floors=SITEPLAN.floors.filter(function(f){return f.id!==id;}); if(wasActive){ var first=SITEPLAN.floors[0]; spLoadFloorState(first.state); SITEPLAN.activeFloorId=first.id; } renderSitePlan(); toast('Plan removed'); }
+function spFloorTabsHTML(){
+  spEnsureFloors();
+  var tabs=SITEPLAN.floors.map(function(f){
+    var on=f.id===SITEPLAN.activeFloorId;
+    return '<span class="sp-floortab'+(on?' on':'')+'" onclick="spSwitchFloor('+f.id+')">'+
+      (on?'<input class="sp-floorname" value="'+String(f.name).replace(/"/g,'&quot;')+'" onclick="event.stopPropagation()" onkeydown="if(event.key===\'Enter\')this.blur()" onchange="spRenameFloor('+f.id+',this.value)">':'<span class="sp-floorlbl">'+spEsc(f.name)+'</span>')+
+      (SITEPLAN.floors.length>1?'<button class="sp-floordel" title="Remove this plan" onclick="event.stopPropagation();spDeleteFloor('+f.id+')">×</button>':'')+
+    '</span>';
+  }).join('');
+  return '<div class="sp-floors"><span class="miniLbl" style="margin:0 6px 0 0">Plans</span>'+tabs+'<button class="btn ghost sm sp-addfloor" onclick="spAddFloor()">+ Add plan</button></div>';
+}
 function spSetRoomTool(t){ SITEPLAN.roomTool=t; renderSitePlan(); }
 function spFind(list,id){ for(var i=0;i<list.length;i++) if(list[i].id===id) return list[i]; return null; }
 function spColor(list,id){ var o=spFind(list,id); return o?o.color:'#64748b'; }
@@ -2275,9 +2323,11 @@ function spChangePlanSource(){ SITEPLAN.planSource=null; renderSitePlan(); }
 function renderSitePlan(){
   var mt=document.getElementById('siteplanMount'); if(!mt) return;
   var sp=SITEPLAN;
+  spEnsureFloors();
+  var floorTabs=spFloorTabsHTML();
   /* Entry choice: Polycam import vs custom builder. */
   if(!sp.planSource){
-    mt.innerHTML='<div class="sp-choose">'+
+    mt.innerHTML=floorTabs+'<div class="sp-choose">'+
       '<button class="sp-choicecard" onclick="spChoosePlan(\'polycam\')"><div class="cc-ic">📐</div><div class="cc-t">Upload floor plan from Polycam</div><div class="cc-s">Bring in a scanned plan, tap Read &amp; trace rooms to pull the rooms and measurements off it, crop if you want, then mark the damp, readings and photos.</div><div class="cc-go">Import scan →</div></button>'+
       '<button class="sp-choicecard" onclick="spChoosePlan(\'custom\')"><div class="cc-ic">✏️</div><div class="cc-t">Custom floor plan</div><div class="cc-s">Build the plan yourself. Draw rooms, walls and fixtures, name them and arrange them, then mark the damp.</div><div class="cc-go">Build it →</div></button>'+
     '</div>';
@@ -2339,7 +2389,7 @@ function renderSitePlan(){
     picker='<div class="sp-card">👆 Tap the plan to drop a numbered photo reference point.</div>';
   }
   var notesBlock='<div class="sp-notes"><div class="sp-listcat">Plan notes</div><textarea class="i" rows="3" placeholder="General notes for this site plan, e.g. remove fitted cupboard, reinstatement by others; raised dampness where floorboards exposed." onchange="spSetNotes(this.value)">'+(sp.notes||'').replace(/</g,'&lt;')+'</textarea></div>';
-  mt.innerHTML=src+roomsBar+
+  mt.innerHTML=floorTabs+src+roomsBar+
     '<div class="sp-toolbar">'+tools+surfaceBar+'<div class="sp-picker">'+picker+'</div></div>'+
     '<div class="sp-canvas2">'+spSVG()+'</div>'+
     '<div class="sp-marked">'+spKey()+spPanel()+notesBlock+'</div>'+
@@ -2395,11 +2445,11 @@ function markerCapture(opts){
   var pre=siteDetailsCap()+overviewCap()+methodologyCap()+(opts.extra||'');
   var h='<div class="divide" style="margin:22px 0 8px"></div><div class="miniLbl">Inspection areas, structured capture</div>';
   AREAS().forEach(function(a,ai){
-    var mine=currentFindings().filter(function(f){return f.loc===a.name;});
+    var mine=currentFindings().filter(function(f){return f.loc===a.name && (!a.multiFloor || f.floorId===a.floorId);});
     var open=a.name===activeArea;
-    var metaTxt=a.kind==='defect'
+    var metaTxt=(a.multiFloor?a.floor+' · ':'')+(a.kind==='defect'
       ? mine.length+' defect'+(mine.length===1?'':'s')
-      : mine.length+' note'+(mine.length===1?'':'s');
+      : mine.length+' note'+(mine.length===1?'':'s'));
     h+='<div class="obsblock">'+
       '<div class="obshead'+(open?' open':'')+'" data-area="'+a.name+'" onclick="toggleObs(this)"><span class="ic">'+a.code+'</span><input class="areaname" value="'+String(a.name).replace(/"/g,'&quot;')+'" onclick="event.stopPropagation()" onkeydown="if(event.key===\'Enter\'){this.blur();}" onchange="renameArea('+ai+',this.value)" title="Edit area name" aria-label="Inspection area name"><span class="meta">'+metaTxt+' · tap to '+(open?'collapse':'expand')+'</span></div>'+
       '<div class="obsbody'+(open?' open':'')+'">'+
@@ -2991,7 +3041,9 @@ function highlightPin(target,n,on){
 }
 function drawPins(target,report){
   var box=document.getElementById(target); if(!box) return; box.innerHTML='';
-  layoutPins(currentFindings()).forEach(function(p){
+  /* A pin-map shows one plan (the active floor), so only that floor's pins land right. */
+  var ff=currentFindings().filter(function(f){ return !f.multiFloor || f.floorId===SITEPLAN.activeFloorId; });
+  layoutPins(ff).forEach(function(p){
     var f=p.f, col=COLORS[f.status];
     var d=document.createElement('div');
     d.className='pin';d.dataset.n=f.n;d.style.left=p.x+'%';d.style.top=p.y+'%';
@@ -3045,7 +3097,7 @@ function planTap(e){
 function renderFindList(){
   var h='';
   currentFindings().forEach(function(f){
-    h+='<div class="kv linkrow" onmouseenter="highlightPin(\'pins\','+f.n+',true)" onmouseleave="highlightPin(\'pins\',0,false)"><span class="k"><span class="sev"><span class="d '+f.status+'"></span>'+f.n+' · '+f.loc+'</span></span>'+
+    h+='<div class="kv linkrow" onmouseenter="highlightPin(\'pins\','+f.n+',true)" onmouseleave="highlightPin(\'pins\',0,false)"><span class="k"><span class="sev"><span class="d '+f.status+'"></span>'+f.n+' · '+(f.multiFloor?spEsc(f.floor)+' · ':'')+f.loc+'</span></span>'+
       '<span class="v" style="font-weight:600;color:var(--muted);max-width:130px;text-align:right;font-size:12px">'+f.type+'</span>'+
       '<button class="qx sm" title="Delete pin '+f.n+'" onclick="removeFinding('+f.n+')">×</button></div>';
   });
@@ -3054,6 +3106,12 @@ function renderFindList(){
 }
 /* Delete a pin / finding (works for both survey types) */
 function removeFinding(n){
+  if(isMarkerDriven()){
+    spEnsureFloors(); spSaveActiveFloor();
+    var target=planFindings().filter(function(f){return f.n===n;})[0];
+    if(target){ SITEPLAN.floors.forEach(function(fl){ var idx=(fl.state.issues||[]).map(function(m){return m.f;}).indexOf(target); if(idx>=0) fl.state.issues.splice(idx,1); }); }
+    renderSitePlan(); renderCapture(); toast('Finding '+n+' deleted'); return;
+  }
   var arr=currentFindings(), i=arr.map(function(f){return f.n;}).indexOf(n);
   if(i>=0) arr.splice(i,1);
   renumber(); renderCapture();
@@ -3887,15 +3945,15 @@ function findRow(f,grouped){
 function renderReportRows(){
   var h='';
   if(isMarkerDriven()){
-    var fs=currentFindings(), areaNames=AREAS().map(function(a){return a.name;});
-    AREAS().forEach(function(a){
-      var mine=fs.filter(function(f){return f.loc===a.name;});
-      h+='<div class="areahd"><div class="aht">'+a.name+'</div>'+
+    var fs=currentFindings(), areas=AREAS();
+    areas.forEach(function(a){
+      var mine=fs.filter(function(f){return f.loc===a.name && (!a.multiFloor||f.floorId===a.floorId);});
+      h+='<div class="areahd"><div class="aht">'+(a.multiFloor?spEsc(a.floor)+' · ':'')+a.name+'</div>'+
          '<div class="ahmeta">'+(a.dims?'<span><strong>Size</strong> '+a.dims+'</span>':'')+'<span><strong>Accessibility</strong> '+(a.access||'Fully accessible')+(a.accessNote?', '+a.accessNote:'')+'</span>'+(a.ch?'<span><strong>Ceiling height</strong> '+a.ch+'</span>':'')+'</div></div>';
       if(!mine.length){ h+='<div class="areanone">No '+(surveyType==='damp'?'damp':'timber')+' findings in this room.</div>'; }
       mine.forEach(function(f){ h+=findRow(f,true); });
     });
-    var orphans=fs.filter(function(f){ return areaNames.indexOf(f.loc)<0; });
+    var orphans=fs.filter(function(f){ return !areas.some(function(a){return a.name===f.loc && (!a.multiFloor||a.floorId===f.floorId);}); });
     if(orphans.length){ h+='<div class="areahd"><div class="aht">Not inside a room</div></div>'; orphans.forEach(function(f){ h+=findRow(f,true); }); }
   } else {
     currentFindings().forEach(function(f){ h+=findRow(f,false); });
