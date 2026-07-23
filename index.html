@@ -623,6 +623,9 @@
   .sp-recoitem.on{border-color:#0ea5e9;box-shadow:0 0 0 2px rgba(14,165,233,.25)}
   .sp-recocount{font-size:11px;color:var(--muted);background:#eef2f3;border-radius:999px;padding:1px 7px;margin-left:2px}
   .sp-recoitem.on .sp-recocount{color:#0284c7}
+  .sp-ftabs{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
+  .sp-ftab{border:1px solid var(--line);background:var(--paper);border-radius:8px;padding:7px 14px;font-family:inherit;font-size:12.5px;font-weight:600;color:var(--ink);cursor:pointer;transition:.15s}
+  .sp-ftab.on{background:#0d4b4d;border-color:#0d4b4d;color:#fff}
   .sp-tpl{width:auto;min-width:150px;padding:8px 10px}
   .sp-soon{opacity:.6;cursor:not-allowed}
   .sp-wrap{display:grid;grid-template-columns:230px minmax(0,1fr) 210px;gap:14px;background:#0f172a;border-radius:16px;padding:14px;align-items:start}
@@ -3103,13 +3106,11 @@ function highlightPin(target,n,on){
     p.classList.toggle('dim',!isN);
   });
 }
-/* Draw one plan per floor, each with its own pins, into "<prefix>_<floorId>" boxes. */
+/* Draw the currently-viewed floor's pins into its "<prefix>_<floorId>" box. */
 function drawFloorPins(prefix,report){
   spEnsureFloors();
-  var all=currentFindings();
-  SITEPLAN.floors.forEach(function(fl){
-    drawPins(prefix+'_'+fl.id, report, all.filter(function(f){return f.floorId===fl.id;}));
-  });
+  var vid=SITEPLAN.viewFloorId; if(!spFloorById(vid)) vid=SITEPLAN.floors[0].id;
+  drawPins(prefix+'_'+vid, report, currentFindings().filter(function(f){return f.floorId===vid;}));
 }
 function drawPins(target,report,finds){
   var box=document.getElementById(target); if(!box) return; box.innerHTML='';
@@ -3631,23 +3632,28 @@ function cmRoomReport(r,ri){
   if(r.rec && r.rec!=='None required.'){ h+='<div class="miniLbl">Room-specific recommendation</div><p class="ranote" style="margin-bottom:0"'+ce('room:'+ri+':rec')+'>'+r.rec+'</p>'; }
   return h+'</div>';
 }
-/* One plan box per floor, each with its own pin container. idPrefix keeps the
-   ids unique per context (capture vs report). Temporarily swaps SITEPLAN to each
-   floor to render its own plan, then restores the active floor. */
+/* Floor TABS + the one selected floor's plan (never stacked). idPrefix keeps ids
+   unique per context (capture vs report). Swaps SITEPLAN to the viewed floor to
+   render its plan, then restores the active floor. */
 function spFloorPlanBoxes(idPrefix){
   spEnsureFloors(); spSaveActiveFloor();
-  var activeId=SITEPLAN.activeFloorId, multi=SITEPLAN.floors.length>1, h='';
-  SITEPLAN.floors.forEach(function(fl){
-    spLoadFloorState(fl.state);
-    h+=(multi?'<div class="miniLbl" style="margin-top:10px">'+spEsc(fl.name)+'</div>':'')+
-       '<div class="planbox" id="'+idPrefix+'_plan_'+fl.id+'">'+planSVG()+'<div id="'+idPrefix+'_'+fl.id+'"></div></div>';
-  });
+  var activeId=SITEPLAN.activeFloorId;
+  var vid=SITEPLAN.viewFloorId; if(!spFloorById(vid)) vid=SITEPLAN.floors[0].id; SITEPLAN.viewFloorId=vid;
+  var tabs=(SITEPLAN.floors.length>1) ? '<div class="sp-ftabs">'+SITEPLAN.floors.map(function(f){ return '<button class="sp-ftab'+(f.id===vid?' on':'')+'" onclick="spViewFloor('+f.id+',\''+idPrefix+'\')">'+spEsc(f.name)+'</button>'; }).join('')+'</div>' : '';
+  var fl=spFloorById(vid); spLoadFloorState(fl.state);
+  var box='<div class="planbox" id="'+idPrefix+'_plan_'+fl.id+'">'+planSVG()+'<div id="'+idPrefix+'_'+fl.id+'"></div></div>';
   var act=spFloorById(activeId); if(act){ spLoadFloorState(act.state); SITEPLAN.activeFloorId=activeId; }
-  return h;
+  return tabs+box;
+}
+/* Switch which floor's plan is on show in the report / on-site map. */
+function spViewFloor(id,prefix){
+  SITEPLAN.viewFloorId=id;
+  var host=document.getElementById(prefix==='reportPins'?'reportPlanHost':'capFloorPlans');
+  if(host){ host.innerHTML=spFloorPlanBoxes(prefix); drawFloorPins(prefix, prefix==='reportPins'); }
 }
 function planPanel(){
   if(!planStepOn()) return ''; /* no site plan on this survey, so no inspection map */
-  return '<div class="miniLbl">Inspection map, tap a marker</div>'+spFloorPlanBoxes('reportPins')+'<div class="hint">Tap a numbered marker to jump to that finding below.</div>';
+  return '<div class="miniLbl">Inspection map, tap a marker</div><div id="reportPlanHost">'+spFloorPlanBoxes('reportPins')+'</div><div class="hint">Tap a numbered marker to jump to that finding below.</div>';
 }
 function findingsList(rowLabel){
   return '<div class="miniLbl">'+rowLabel+'</div><div id="reportFindRows"></div>';
