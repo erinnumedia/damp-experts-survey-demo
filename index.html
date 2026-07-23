@@ -2072,8 +2072,6 @@ function spSVG(){
       '<circle cx="'+o.x+'" cy="'+o.y+'" r="13" fill="#fff" fill-opacity="0.95" stroke="#1f2937" stroke-width="2"/>'+
       '<text x="'+o.x+'" y="'+o.y+'" text-anchor="middle" dominant-baseline="central" font-size="11" font-weight="bold" fill="#1f2937">P'+o.ref+'</text></g>';
   });
-  /* north arrow + scale */
-  s+='<g transform="translate('+(wld.w-28)+',28)"><circle cx="0" cy="0" r="13" fill="#fff" stroke="#64748b" stroke-width="1"/><path d="M 0,-9 L 4,6 L 0,4 L -4,6 Z" fill="#1f2937"/><text x="0" y="20" text-anchor="middle" font-size="8" fill="#64748b">N</text></g>';
   s+='<text x="10" y="'+(wld.h-8)+'" font-size="10" fill="#94a3b8" font-style="italic">Not to scale</text>';
   if(sp.mode==='crop') s+='<g id="spCropOverlay">'+spCropOverlaySVG(wld)+'</g>';
   s+='</svg>';
@@ -2458,7 +2456,7 @@ function markerCapture(opts){
           '<div class="miniLbl">Additional information</div>'+
           '<textarea class="i" rows="2" placeholder="Describe the access restriction, what was limited, why, and any risk to note." onchange="setAreaAccessNote('+ai+',this.value)">'+(a.accessNote||'')+'</textarea>'+
         '</div>'+
-        '<div class="miniLbl">Ceiling height</div><input class="i" value="'+String(a.ch||'').replace(/"/g,'&quot;')+'" placeholder="e.g. 2.4m" onchange="setAreaHeight('+ai+',this.value)" style="max-width:170px">'+
+        (surveyType==='damp' ? '<div class="miniLbl">Ceiling height</div><input class="i" value="'+String(a.ch||'').replace(/"/g,'&quot;')+'" placeholder="e.g. 2.4m" onchange="setAreaHeight('+ai+',this.value)" style="max-width:170px">' : '')+
         '<div class="divide"></div>';
     if(a.kind==='defect'){
       if(mine.length){ mine.forEach(function(f){ h+=defCard(f); }); }
