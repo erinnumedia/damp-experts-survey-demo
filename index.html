@@ -2350,13 +2350,18 @@ function renderSitePlan(){
    STRUCTURED CAPTURE (type-aware)
    ================================================================== */
 function renderCapture(){
-  document.getElementById('planLayer').innerHTML=planSVG();
+  /* The finding pin-map only belongs to plan-based (Damp) surveys. */
+  var usePlan=planStepOn();
+  var pw=document.querySelector('.capplan .planwrap'), cp=document.querySelector('.capplan');
+  if(pw) pw.style.display=usePlan?'':'none';
+  if(cp) cp.style.gridTemplateColumns=usePlan?'':'1fr';
+  if(usePlan) document.getElementById('planLayer').innerHTML=planSVG();
   var cap =
     surveyType==='timber' ? timberCapture() :
     surveyType==='damp'   ? dampCapture()   : cmCapture();
   setHTML('capturePre', cap.pre);
   setHTML('captureAreas', cap.areas);
-  drawPins('pins',false);
+  if(usePlan) drawPins('pins',false);
   renderFindList();
 }
 
@@ -3487,6 +3492,7 @@ function cmRoomReport(r,ri){
   return h+'</div>';
 }
 function planPanel(){
+  if(!planStepOn()) return ''; /* no site plan on this survey, so no inspection map */
   return '<div class="miniLbl">Inspection map, tap a marker</div><div class="planbox" id="reportPlan">'+planSVG()+'<div id="reportPins"></div></div><div class="hint">Tap a numbered marker to jump to that finding below.</div>';
 }
 function findingsList(rowLabel){
