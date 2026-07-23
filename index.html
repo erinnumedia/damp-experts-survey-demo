@@ -3312,6 +3312,7 @@ function renderSpecList(){
   var h=''; SPEC_STEPS.forEach(function(t){ h+='<div><span class="tick">✓</span>'+t+'</div>'; });
   document.getElementById('specList').innerHTML=h;
 }
+var SPEC_RESULT=null; /* AI-generated recommendations/specification, from the survey */
 function runSpecGen(){
   var fill=document.getElementById('specFill');
   var items=document.querySelectorAll('#specList div');
@@ -3319,28 +3320,58 @@ function runSpecGen(){
   var mount=document.getElementById('specMount');
   fill.style.width='0'; btn.style.display='none'; mount.style.display='none';
   items.forEach(function(it){it.classList.remove('done');});
-  var i=0;
-  var iv=setInterval(function(){
-    if(i<items.length){items[i].classList.add('done');i++;fill.style.width=(i/items.length*100)+'%';}
-    else{clearInterval(iv);btn.style.display='inline-flex';}
-  },460);
+  SPEC_RESULT=null;
+  function finish(){ items.forEach(function(it){it.classList.add('done');}); fill.style.width='100%'; btn.style.display='inline-flex'; }
+  /* progress creeps to ~90% while Claude works, then completes on return */
+  var i=0; var iv=setInterval(function(){ if(i<items.length-1){items[i].classList.add('done');i++;fill.style.width=(i/items.length*90)+'%';} },520);
+  var finds=currentFindings();
+  if(!finds.length){ clearInterval(iv); finish(); return; }
+  var summary=finds.map(function(f,ix){ return (ix+1)+'. '+f.type+' — '+(f.multiFloor?f.floor+', ':'')+f.loc+(f.surface?' ('+f.surface+')':'')+
+    (f.treat&&f.treat.length?'. Surveyor marked treatments: '+f.treat.join('; '):'')+(f.note?'. Note: '+f.note:''); }).join('\n');
+  nuAI({
+    system:'You are a senior damp and timber surveyor writing the remedial recommendations and technical specification for a survey report, in Damp Experts Group’s professional voice. British English, no em dashes. Base everything strictly on the findings supplied. Return ONLY strict JSON.',
+    prompt:'From this survey, produce the recommended treatments and full technical specification for the workers. Findings:\n'+summary+'\n\nFor EACH recommended work give: title, objective, a detailed specification (method and materials), a step-by-step sequence of works, and the relevant British Standards / compliance (e.g. BS 6576 chemical DPC, BS 8417 timber preservation, BS 5250 moisture/condensation, Building Regs Approved Documents C and F, PCA guidance). Use the treatments the surveyor marked, and add the correct standard treatments for each damp type (for example rising damp needs a chemical DPC plus salt-retardant renovating plaster; condensation needs improved ventilation/extraction). Then give an ordered plan of action so causes are resolved before making good. Return ONLY JSON: {"plan":["step 1","step 2"],"works":[{"title":"","objective":"","specification":"","sequence":["step","step"],"standards":"","addresses":"damp type and location"}]}. No commentary.',
+    max_tokens:4000, noThink:true
+  }).then(function(txt){
+    clearInterval(iv);
+    try{ var m=txt.match(/\{[\s\S]*\}/); var d=JSON.parse(m?m[0]:txt); if(d&&d.works&&d.works.length) SPEC_RESULT=d; }catch(e){ SPEC_RESULT=null; }
+    finish();
+  }).catch(function(err){
+    clearInterval(iv); SPEC_RESULT=null; finish();
+    var msg=(err&&err.message)?String(err.message):'';
+    toast(/overload|529|too many/i.test(msg)?'Claude’s servers are busy, tap View again in a moment.':'AI recommendations need the live site (Claude key). Showing standard specs for now.');
+  });
 }
 function renderSpec(mountId){
-  var works=specWorks();
-  var plan='';
-  works.forEach(function(w){ plan+='<li><strong>'+w.title+'</strong>'+(w.linked?'<span class="hint" style="display:inline">, addresses '+w.linked+'</span>':'')+'</li>'; });
+  var plan='', cards='';
+  if(SPEC_RESULT && SPEC_RESULT.works && SPEC_RESULT.works.length){
+    /* Claude-generated from the survey findings + marked treatments */
+    (SPEC_RESULT.plan||[]).forEach(function(s){ plan+='<li>'+spEsc(s)+'</li>'; });
+    SPEC_RESULT.works.forEach(function(w){
+      cards+='<div class="recbox">'+
+        '<h4>'+spEsc(w.title||'Recommended work')+'</h4>'+
+        (w.addresses?'<div class="hint"><strong>Addresses</strong>, '+spEsc(w.addresses)+'</div>':'')+
+        (w.objective?'<div class="hint"><strong>Objective</strong>, '+spEsc(w.objective)+'</div>':'')+
+        '<div class="miniLbl" style="margin-top:10px">Specification</div><p class="ranote" style="margin:0 0 8px">'+spEsc(w.specification||'')+'</p>'+
+        ((w.sequence&&w.sequence.length)?'<div class="miniLbl">Sequence of works</div><ul class="rec-scope">'+w.sequence.map(function(s){return '<li>'+spEsc(s)+'</li>';}).join('')+'</ul>':'')+
+        (w.standards?'<div class="hint" style="margin-top:8px"><strong>Standards &amp; compliance</strong>, '+spEsc(w.standards)+'</div>':'')+
+      '</div>';
+    });
+  } else {
+    var works=specWorks();
+    works.forEach(function(w){ plan+='<li><strong>'+w.title+'</strong>'+(w.linked?'<span class="hint" style="display:inline">, addresses '+w.linked+'</span>':'')+'</li>'; });
+    works.forEach(function(w){
+      var det=specDetail(w);
+      cards+='<div class="recbox">'+
+        '<h4>'+w.title+'</h4>'+
+        '<div class="hint"><strong>Objective</strong>, '+(w.purpose||'')+'</div>'+
+        '<div class="miniLbl" style="margin-top:10px">Specification</div><p class="ranote" style="margin:0 0 8px">'+det.spec+'</p>'+
+        '<div class="miniLbl">Sequence of works</div><ul class="rec-scope">'+(w.scope||[]).map(function(s){return '<li>'+s+'</li>';}).join('')+'</ul>'+
+        '<div class="hint" style="margin-top:8px"><strong>Standards &amp; compliance</strong>, '+det.std+'</div>'+
+      '</div>';
+    });
+  }
   if(!plan) plan='<li>No recommended works on this report.</li>';
-  var cards='';
-  works.forEach(function(w){
-    var det=specDetail(w);
-    cards+='<div class="recbox">'+
-      '<h4>'+w.title+'</h4>'+
-      '<div class="hint"><strong>Objective</strong>, '+(w.purpose||'')+'</div>'+
-      '<div class="miniLbl" style="margin-top:10px">Specification</div><p class="ranote" style="margin:0 0 8px">'+det.spec+'</p>'+
-      '<div class="miniLbl">Sequence of works</div><ul class="rec-scope">'+(w.scope||[]).map(function(s){return '<li>'+s+'</li>';}).join('')+'</ul>'+
-      '<div class="hint" style="margin-top:8px"><strong>Standards &amp; compliance</strong>, '+det.std+'</div>'+
-    '</div>';
-  });
   var h='<div class="report" style="border-top:1px solid var(--line);border-radius:16px">'+
     '<div class="rsection"><div class="miniLbl">Recommended plan of action</div>'+
       '<div class="hint" style="margin:-4px 0 10px">Sequenced from the completed report, carry out in the order below so the causes are resolved before making good.</div>'+
