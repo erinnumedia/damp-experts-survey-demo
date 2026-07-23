@@ -2350,12 +2350,22 @@ function renderSitePlan(){
    STRUCTURED CAPTURE (type-aware)
    ================================================================== */
 function renderCapture(){
-  /* The finding pin-map only belongs to plan-based (Damp) surveys. */
+  /* The finding pin-map only belongs to plan-based (Damp) surveys. With no plan,
+     the findings summary moves to the bottom, as the result of filling it all in. */
   var usePlan=planStepOn();
-  var pw=document.querySelector('.capplan .planwrap'), cp=document.querySelector('.capplan');
-  if(pw) pw.style.display=usePlan?'':'none';
-  if(cp) cp.style.gridTemplateColumns=usePlan?'':'1fr';
-  if(usePlan) document.getElementById('planLayer').innerHTML=planSVG();
+  var cp=document.querySelector('.capplan'), pw=cp&&cp.querySelector('.planwrap'),
+      findwrap=document.querySelector('.capstage .findwrap'), capstage=document.querySelector('.capstage');
+  if(usePlan){
+    if(cp){ cp.style.display=''; cp.style.gridTemplateColumns=''; }
+    if(pw) pw.style.display='';
+    if(findwrap && cp && findwrap.parentNode!==cp) cp.appendChild(findwrap);
+    if(findwrap) findwrap.style.marginTop='';
+    document.getElementById('planLayer').innerHTML=planSVG();
+  } else {
+    if(cp) cp.style.display='none';
+    if(findwrap && capstage && findwrap.parentNode!==capstage) capstage.appendChild(findwrap);
+    if(findwrap) findwrap.style.marginTop='22px';
+  }
   var cap =
     surveyType==='timber' ? timberCapture() :
     surveyType==='damp'   ? dampCapture()   : cmCapture();
