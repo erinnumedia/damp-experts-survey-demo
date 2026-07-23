@@ -615,6 +615,14 @@
   .sp-floordel{border:0;background:transparent;color:rgba(255,255,255,.75);font-size:15px;line-height:1;cursor:pointer;padding:0 4px}
   .sp-floortab:not(.on) .sp-floordel{color:var(--muted)}
   .sp-addfloor{border-style:dashed}
+  .sp-layerbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:14px}
+  .sp-layerbtn{border:1px solid var(--line);background:var(--paper);border-radius:999px;padding:8px 16px;font-family:inherit;font-size:13px;font-weight:600;color:var(--ink);cursor:pointer;transition:.15s}
+  .sp-layerbtn.on{background:#0d4b4d;border-color:#0d4b4d;color:#fff;cursor:default}
+  .sp-recolist{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
+  .sp-recoitem{display:inline-flex;align-items:center;gap:7px;border:1px solid var(--line);background:var(--paper);border-radius:999px;padding:7px 12px;font-family:inherit;font-size:12.5px;font-weight:600;color:var(--ink);cursor:pointer}
+  .sp-recoitem.on{border-color:#0ea5e9;box-shadow:0 0 0 2px rgba(14,165,233,.25)}
+  .sp-recocount{font-size:11px;color:var(--muted);background:#eef2f3;border-radius:999px;padding:1px 7px;margin-left:2px}
+  .sp-recoitem.on .sp-recocount{color:#0284c7}
   .sp-tpl{width:auto;min-width:150px;padding:8px 10px}
   .sp-soon{opacity:.6;cursor:not-allowed}
   .sp-wrap{display:grid;grid-template-columns:230px minmax(0,1fr) 210px;gap:14px;background:#0f172a;border-radius:16px;padding:14px;align-items:start}
@@ -1417,6 +1425,7 @@ function planFindings(){
       if(f.status===undefined) f.status='active';
       f.note=m.note||'';
       f.surface=m.surface;
+      f.treat=(m.treat||[]).slice();
       f.x=Math.max(3,Math.min(97,Math.round(cx/wld.w*100)));
       f.y=Math.max(3,Math.min(97,Math.round(cy/wld.h*100)));
       out.push(f);
@@ -1703,6 +1712,48 @@ function spAllTypes(){ return SP_TYPES.damp.concat(SP_TYPES.timber,SP_TYPES.cm);
 function spTypeColor(id){ var o=spFind(getSPIssues(),id)||spFind(spAllTypes(),id); return o?o.color:'#64748b'; }
 function spTypeLabel(id){ var o=spFind(getSPIssues(),id)||spFind(spAllTypes(),id); return o?o.label:id; }
 var SP_ISSUES=SP_TYPES.damp; /* legacy alias */
+/* Recommended treatments per damp / defect type (the top recommendations). The
+   surveyor attaches these to each damp mark so the workers know what to do. */
+var SP_TREAT_CAT={
+  rising:['Chemical DPC injection (damp-proofing cream)','Hack off contaminated plaster to 1m','Re-plaster with salt-retardant renovating plaster','Install physical damp-proof course','Improve sub-floor / underfloor ventilation','Apply tanking / waterproof render to affected wall'],
+  penetrating:['Repoint defective / eroded pointing','Apply breathable masonry water-repellent cream','Repair or renew external render','Overhaul rainwater goods (gutters & downpipes)','Repair roof coverings, flashings & verges','Reseal window & door perimeters'],
+  condensation:['Install PIV (positive input ventilation) unit','Fit humidity-tracking extractor fan','Add trickle vents to windows','Upgrade loft / wall insulation','Apply anti-condensation coating','Heating & lifestyle advice'],
+  mould:['Fungicidal wash & mould sterilisation','Apply anti-mould paint','Improve room ventilation','Treat the underlying condensation','Wipe-down & maintenance regime'],
+  salt:['Hack off salt-contaminated plaster','Apply salt-neutralising treatment','Re-plaster with salt-retardant renovating plaster'],
+  bridging:['Reduce external ground levels below DPC','Remove DPC bridging material / debris','Install French drain or drainage channel','Form a clear cavity / air gap'],
+  damp_staining:['Trace & fix the moisture source','Stain-block & redecorate','Monitor for recurrence'],
+  wet_rot:['Cut out & replace decayed timber','Apply fungicidal timber treatment','Trace & eliminate the moisture source','Improve ventilation to the timbers'],
+  dry_rot:['Remove all affected timber & plaster','Fungicidal masonry sterilisation','Isolate outbreak & install physical DPC','Promote rapid drying & ventilation','Replace with pre-treated timber'],
+  woodworm:['Apply insecticidal timber treatment','Replace structurally weakened timber','Reduce timber moisture content'],
+  deathwatch:['Insecticidal treatment to affected timbers','Reduce the dampness feeding the infestation','Replace badly weakened timber'],
+  longhorn:['Insecticidal treatment (House Longhorn)','Replace weakened structural timber','Notify Building Control if required'],
+  structural:['Replace / sister the affected timber','Structural engineer assessment','Support & repair as specified']
+};
+var SP_TREAT_GENERIC=['Monitor, no active treatment required','Further investigation recommended','Specialist referral'];
+function spTreatmentsFor(typeId){ return (SP_TREAT_CAT[typeId]||[]).concat(SP_TREAT_GENERIC); }
+/* Layer: 'damp' (mark the problems) vs 'reco' (attach treatments to each mark). */
+function spSwitchLayer(){ SITEPLAN.layer=(SITEPLAN.layer==='reco')?'damp':'reco'; SITEPLAN.selMark=null; SITEPLAN.draw=null; SITEPLAN.drag=null; renderSitePlan(); }
+function spMarkAt(x,y){ var iss=SITEPLAN.issues||[]; for(var i=iss.length-1;i>=0;i--){ var o=iss[i]; if(o.kind==='rect'){ if(x>=o.x-6&&x<=o.x+o.w+6&&y>=o.y-6&&y<=o.y+o.h+6) return o; } else if(spDistToSeg(x,y,o)<10) return o; } return null; }
+function spSelectMark(id){ SITEPLAN.selMark=id; renderSitePlan(); }
+function spToggleTreatI(markId,idx){ var m=spFind(SITEPLAN.issues,markId); if(!m) return; var tr=spTreatmentsFor(m.type)[idx]; if(!tr) return; if(!m.treat) m.treat=[]; var i=m.treat.indexOf(tr); if(i>=0) m.treat.splice(i,1); else m.treat.push(tr); renderSitePlan(); }
+function spRecoPanel(){
+  var sp=SITEPLAN, iss=sp.issues||[];
+  if(!iss.length) return '<div class="sp-card">🛠 <b>Recommendations.</b> No damp is marked on this plan yet. Switch to <b>Damp survey</b>, mark the damp, then come back here to attach the treatments.</div>';
+  var h='<div class="sp-picktitle">Damp marks — tap one to add its treatments</div><div class="sp-recolist">';
+  iss.forEach(function(o,i){ var col=spTypeColor(o.type), n=(o.treat||[]).length, sel=(o.id===sp.selMark);
+    h+='<button class="sp-recoitem'+(sel?' on':'')+'" onclick="spSelectMark('+o.id+')"><span class="sp-dot" style="background:'+col+'"></span>'+(i+1)+' · '+spEsc(spTypeLabel(o.type))+(o.room?' · '+spEsc(o.room):'')+'<span class="sp-recocount">'+(n?n+' ✓':'add')+'</span></button>';
+  });
+  h+='</div>';
+  var m=spFind(iss,sp.selMark);
+  if(m){
+    h+='<div class="sp-picktitle" style="margin-top:12px">Treatments for '+spEsc(spTypeLabel(m.type))+(m.room?' · '+spEsc(m.room):'')+'</div><div class="sp-typerow">';
+    spTreatmentsFor(m.type).forEach(function(t,ti){ var on=(m.treat||[]).indexOf(t)>=0; h+='<button class="sp-type'+(on?' on':'')+'" onclick="spToggleTreatI('+m.id+','+ti+')">'+(on?'✓ ':'')+spEsc(t)+'</button>'; });
+    h+='</div><div class="sp-hint">Tick every treatment the workers need to carry out for this damp. They flow through to the report.</div>';
+  } else {
+    h+='<div class="sp-hint">Pick a damp mark above, or tap it on the plan, to attach its treatments.</div>';
+  }
+  return h;
+}
 var SP_TREATMENTS=[
   {id:'dpc_injection',label:'DPC Injection',color:'#16a34a'},
   {id:'replastering',label:'Replastering',color:'#64748b'},
@@ -1764,7 +1815,7 @@ function spFloorById(id){ var fs=SITEPLAN.floors||[]; for(var i=0;i<fs.length;i+
 function spActiveFloor(){ spEnsureFloors(); return spFloorById(SITEPLAN.activeFloorId); }
 function spSaveActiveFloor(){ spEnsureFloors(); var fl=spFloorById(SITEPLAN.activeFloorId); if(fl) fl.state=spSnapshotFloor(); }
 function spWorldOf(st){ var W=st.traceW||400, H=st.traceH||320; (st.rooms||[]).forEach(function(r){ W=Math.max(W,r.x+r.w+20); H=Math.max(H,r.y+r.h+26); }); (st.readings||[]).concat(st.photos||[]).forEach(function(o){ W=Math.max(W,o.x+22); H=Math.max(H,o.y+28); }); return {w:Math.round(W),h:Math.round(H)}; }
-function spSwitchFloor(id){ if(id===SITEPLAN.activeFloorId) return; spSaveActiveFloor(); var fl=spFloorById(id); if(!fl) return; spLoadFloorState(fl.state); SITEPLAN.activeFloorId=id; SITEPLAN.mode='damp'; SITEPLAN.cropRect=null; SITEPLAN.cropDrag=null; SITEPLAN.draw=null; SITEPLAN.drag=null; renderSitePlan(); }
+function spSwitchFloor(id){ if(id===SITEPLAN.activeFloorId) return; spSaveActiveFloor(); var fl=spFloorById(id); if(!fl) return; spLoadFloorState(fl.state); SITEPLAN.activeFloorId=id; SITEPLAN.mode='damp'; SITEPLAN.selMark=null; SITEPLAN.cropRect=null; SITEPLAN.cropDrag=null; SITEPLAN.draw=null; SITEPLAN.drag=null; renderSitePlan(); }
 function spDefaultFloorName(){ var names=['First Floor','Second Floor','Third Floor','Basement','Loft']; var used=(SITEPLAN.floors||[]).map(function(f){return f.name;}); for(var i=0;i<names.length;i++){ if(used.indexOf(names[i])<0) return names[i]; } return 'Floor '+((SITEPLAN.floors||[]).length+1); }
 function spAddFloor(){ spSaveActiveFloor(); var id=SITEPLAN.floorSeq++; var n=spDefaultFloorName(); SITEPLAN.floors.push({id:id,name:n,state:spBlankFloorState()}); spLoadFloorState(spFloorById(id).state); SITEPLAN.activeFloorId=id; SITEPLAN.mode='damp'; renderSitePlan(); toast('Added '+n+'. Upload or build its plan.'); }
 function spRenameFloor(id,name){ var fl=spFloorById(id); if(fl) fl.name=(name||'').trim()||fl.name; buildRail&&buildRail(); }
@@ -1860,6 +1911,9 @@ function spHitDraggable(x,y){
 }
 function spPointerDown(e){
   var sp=SITEPLAN;
+  if(sp.layer==='reco'){ /* recommendations: tap a damp mark to attach its treatments */
+    e.preventDefault(); var rp=spEvtXY(e); var mk=spMarkAt(rp.x,rp.y); if(mk){ sp.selMark=mk.id; renderSitePlan(); } return;
+  }
   if(sp.mode==='crop'){
     e.preventDefault(); var cp=spEvtXY(e); var hh=spCropHandleAt(cp.x,cp.y);
     if(hh && sp.cropRect){ sp.cropDrag={handle:hh,ptrX:cp.x,ptrY:cp.y,o:{x:sp.cropRect.x,y:sp.cropRect.y,w:sp.cropRect.w,h:sp.cropRect.h}};
@@ -2044,18 +2098,20 @@ function spSVG(){
     (sp.elements||[]).forEach(function(el){ s+='<g id="spel-'+el.id+'" class="sp-gpt">'+spElementSVG(el)+'</g>'; });
   }
   /* damp marks: lines for walls, filled areas for floor/ceiling, numbered to match the list */
-  sp.issues.forEach(function(o,i){ var c=spTypeColor(o.type);
+  sp.issues.forEach(function(o,i){ var c=spTypeColor(o.type), ccx, ccy;
     if(o.kind==='rect'){
-      var cx=o.x+o.w/2, cy=o.y+o.h/2;
+      var cx=o.x+o.w/2, cy=o.y+o.h/2; ccx=cx; ccy=cy;
       s+='<rect x="'+o.x+'" y="'+o.y+'" width="'+o.w+'" height="'+o.h+'" rx="3" fill="'+c+'" fill-opacity="'+(o.surface==='ceiling'?0.13:0.24)+'" stroke="'+c+'" stroke-width="2"'+(o.surface==='ceiling'?' stroke-dasharray="5 3"':'')+'/>';
       if(o.surface==='ceiling') s+='<rect x="'+o.x+'" y="'+o.y+'" width="'+o.w+'" height="'+o.h+'" rx="3" fill="url(#spceil)"/>';
       s+='<circle cx="'+cx+'" cy="'+cy+'" r="9" fill="'+c+'" stroke="#fff" stroke-width="1.5"/><text x="'+cx+'" y="'+cy+'" text-anchor="middle" dominant-baseline="central" font-size="9" font-weight="bold" fill="#fff">'+(i+1)+'</text>';
     } else {
-      var mx=(o.x1+o.x2)/2, my=(o.y1+o.y2)/2;
+      var mx=(o.x1+o.x2)/2, my=(o.y1+o.y2)/2; ccx=mx; ccy=my;
       s+='<line x1="'+o.x1+'" y1="'+o.y1+'" x2="'+o.x2+'" y2="'+o.y2+'" stroke="#fff" stroke-width="7.5" stroke-linecap="round" opacity="0.95"/>';
       s+='<line x1="'+o.x1+'" y1="'+o.y1+'" x2="'+o.x2+'" y2="'+o.y2+'" stroke="'+c+'" stroke-width="4.5" stroke-linecap="round"/>';
       s+='<circle cx="'+mx+'" cy="'+my+'" r="8" fill="'+c+'" stroke="#fff" stroke-width="1.5"/><text x="'+mx+'" y="'+my+'" text-anchor="middle" dominant-baseline="central" font-size="9" font-weight="bold" fill="#fff">'+(i+1)+'</text>';
     }
+    if(sp.layer==='reco' && o.id===sp.selMark){ s+='<circle cx="'+ccx+'" cy="'+ccy+'" r="15" fill="none" stroke="#0ea5e9" stroke-width="2.5"/>'; }
+    if(o.treat && o.treat.length){ s+='<circle cx="'+(ccx+11)+'" cy="'+(ccy-11)+'" r="6.5" fill="#16a34a" stroke="#fff" stroke-width="1.3"/><path d="M '+(ccx+8)+' '+(ccy-11)+' l 1.8 2.2 l 3.6 -4.6" fill="none" stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>'; }
   });
   s+='<line id="spPreview" x1="0" y1="0" x2="0" y2="0" stroke="#e11d48" stroke-width="4.5" stroke-linecap="round" stroke-dasharray="6 4" opacity="0.85" style="display:none"/>';
   s+='<rect id="spPreviewR" x="0" y="0" width="0" height="0" fill="#e11d48" fill-opacity="0.2" stroke="#e11d48" stroke-width="2" stroke-dasharray="5 3" style="display:none"/>';
@@ -2387,8 +2443,14 @@ function renderSitePlan(){
     picker='<div class="sp-card">👆 Tap the plan to drop a numbered photo reference point.</div>';
   }
   var notesBlock='<div class="sp-notes"><div class="sp-listcat">Plan notes</div><textarea class="i" rows="3" placeholder="General notes for this site plan, e.g. remove fitted cupboard, reinstatement by others; raised dampness where floorboards exposed." onchange="spSetNotes(this.value)">'+(sp.notes||'').replace(/</g,'&lt;')+'</textarea></div>';
-  mt.innerHTML=floorTabs+src+roomsBar+
-    '<div class="sp-toolbar">'+tools+surfaceBar+'<div class="sp-picker">'+picker+'</div></div>'+
+  var layer=sp.layer||'damp';
+  var layerBar='<div class="sp-layerbar"><span class="miniLbl" style="margin:0 6px 0 0">Working on</span>'+
+    '<button class="sp-layerbtn'+(layer==='damp'?' on':'')+'"'+(layer!=='damp'?' onclick="spSwitchLayer()"':'')+'>⚠ Damp survey</button>'+
+    '<button class="sp-layerbtn'+(layer==='reco'?' on':'')+'"'+(layer!=='reco'?' onclick="spSwitchLayer()"':'')+'>🛠 Recommendations</button>'+
+    '</div>';
+  var toolbarInner=(layer==='reco') ? spRecoPanel() : (tools+surfaceBar+'<div class="sp-picker">'+picker+'</div>');
+  mt.innerHTML=floorTabs+src+roomsBar+layerBar+
+    '<div class="sp-toolbar">'+toolbarInner+'</div>'+
     '<div class="sp-canvas2">'+spSVG()+'</div>'+
     '<div class="sp-marked">'+spKey()+spPanel()+notesBlock+'</div>'+
     '<div class="sp-modal" id="spModal"></div>';
@@ -3925,6 +3987,7 @@ function findingDetailHTML(f){
     +'<div class="miniLbl">Professional opinion</div><p style="font-size:13.5px;margin:0 0 12px"'+ce('find:'+f.n+':opinion')+'>'+f.opinion+'</p>'
     +(f.factors&&f.factors.length?'<div class="miniLbl">Contributing factors</div>'+bullets(f.factors,'find:'+f.n+':factors'):(f.cause?'<div class="miniLbl">Cause</div><p style="font-size:13.5px;margin:0 0 12px"'+ce('find:'+f.n+':cause')+'>'+f.cause+'</p>':''))
     +(f.fix?'<div class="miniLbl">Recommended resolution</div><p style="font-size:13.5px;margin:0"'+ce('find:'+f.n+':fix')+'>'+f.fix+'</p>':'')
+    +(f.treat&&f.treat.length?'<div class="miniLbl" style="margin-top:12px">Recommended treatments</div><ul class="evlist">'+f.treat.map(function(t){return '<li>'+spEsc(t)+'</li>';}).join('')+'</ul>':'')
     +(f.note?'<div class="miniLbl" style="margin-top:12px">Surveyor’s note</div><p style="font-size:13.5px;margin:0" contenteditable="true" spellcheck="false" onblur="setDefectNote('+f.n+',this.textContent)">'+f.note+'</p>':'');
 }
 function findRow(f,grouped){
