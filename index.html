@@ -1464,8 +1464,8 @@ var rail=[
   {t:'Quoted works',sub:'Manual pricing',s:7},
   {t:'Review & send',sub:'Report · specs · price · email',s:8}
 ];
-/* Condensation & Mould is worked room by room, so it has no site plan step. */
-function railFor(){ return rail.filter(function(r){ return !(surveyType==='cm' && r.s===2); }); }
+/* The site plan is only for Damp Surveys. Every other survey type skips it. */
+function railFor(){ return rail.filter(function(r){ return !(surveyType!=='damp' && r.s===2); }); }
 function buildRail(){
   var h='';
   railFor().forEach(function(r,pos){
@@ -1474,7 +1474,7 @@ function buildRail(){
   document.getElementById('rail').innerHTML=h;
 }
 function go(i){
-  if(surveyType==='cm' && i===2) i=3; /* CM skips the site plan */
+  if(surveyType!=='damp' && i===2) i=3; /* site plan is Damp-only */
   cur=i;
   document.querySelectorAll('.screen').forEach(function(s){s.classList.toggle('on',+s.dataset.s===i);});
   document.querySelectorAll('.step').forEach(function(st){
@@ -1508,7 +1508,7 @@ function AREAS(){
 function DEFECT_TYPES(){ return surveyType==='damp' ? DAMP_TYPES : TIMBER_TYPES; }
 function DEFECT_STATUS(){ return surveyType==='damp' ? DAMP_STATUS : TIMBER_STATUS; }
 /* Marker-driven types capture findings by area; cm captures room-by-room. */
-function isMarkerDriven(){ return surveyType==='timber' || surveyType==='damp'; }
+function isMarkerDriven(){ return surveyType==='damp'; }
 
 function setType(t){
   surveyType=t;
@@ -1523,7 +1523,7 @@ function setType(t){
   if(typeof buildRail==='function') buildRail();
   /* keep the site plan's damp-type palette in sync with the survey type */
   if(typeof renderSitePlan==='function' && document.getElementById('siteplanMount')){ renderSitePlan(); }
-  if(surveyType==='cm' && typeof cur!=='undefined' && cur===2){ go(3); }
+  if(surveyType!=='damp' && typeof cur!=='undefined' && cur===2){ go(3); }
 }
 function buildTypeSwitch(mountId,after){
   var m=document.getElementById(mountId);
