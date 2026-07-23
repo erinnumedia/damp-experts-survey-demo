@@ -897,6 +897,7 @@
               <div id="planLayer"></div>
               <div id="pins"></div>
             </div>
+            <div id="capFloorPlans" style="display:none"></div>
             <div class="hint">Pins use % coordinates, so they map correctly on any screen or the client's device.</div>
           </div>
 
@@ -2465,12 +2466,15 @@ function renderCapture(){
   var usePlan=planStepOn();
   var cp=document.querySelector('.capplan'), pw=cp&&cp.querySelector('.planwrap'),
       findwrap=document.querySelector('.capstage .findwrap'), capstage=document.querySelector('.capstage');
+  var multiFloor=usePlan && (spEnsureFloors(),SITEPLAN.floors.length>1);
+  var pb=document.getElementById('planbox'), cfp=document.getElementById('capFloorPlans');
   if(usePlan){
     if(cp){ cp.style.display=''; cp.style.gridTemplateColumns=''; }
     if(pw) pw.style.display='';
     if(findwrap && cp && findwrap.parentNode!==cp) cp.appendChild(findwrap);
     if(findwrap) findwrap.style.marginTop='';
-    document.getElementById('planLayer').innerHTML=planSVG();
+    if(multiFloor){ if(pb) pb.style.display='none'; if(cfp){ cfp.style.display=''; cfp.innerHTML=spFloorPlanBoxes('pins'); } }
+    else { if(pb) pb.style.display=''; if(cfp){ cfp.style.display='none'; cfp.innerHTML=''; } document.getElementById('planLayer').innerHTML=planSVG(); }
   } else {
     if(cp) cp.style.display='none';
     if(findwrap && capstage && findwrap.parentNode!==capstage) capstage.appendChild(findwrap);
@@ -2481,7 +2485,7 @@ function renderCapture(){
     surveyType==='damp'   ? dampCapture()   : cmCapture();
   setHTML('capturePre', cap.pre);
   setHTML('captureAreas', cap.areas);
-  if(usePlan) drawPins('pins',false);
+  if(usePlan){ if(multiFloor) drawFloorPins('pins',false); else drawPins('pins',false); }
   renderFindList();
 }
 
@@ -3099,10 +3103,18 @@ function highlightPin(target,n,on){
     p.classList.toggle('dim',!isN);
   });
 }
-function drawPins(target,report){
+/* Draw one plan per floor, each with its own pins, into "<prefix>_<floorId>" boxes. */
+function drawFloorPins(prefix,report){
+  spEnsureFloors();
+  var all=currentFindings();
+  SITEPLAN.floors.forEach(function(fl){
+    drawPins(prefix+'_'+fl.id, report, all.filter(function(f){return f.floorId===fl.id;}));
+  });
+}
+function drawPins(target,report,finds){
   var box=document.getElementById(target); if(!box) return; box.innerHTML='';
-  /* A pin-map shows one plan (the active floor), so only that floor's pins land right. */
-  var ff=currentFindings().filter(function(f){ return !f.multiFloor || f.floorId===SITEPLAN.activeFloorId; });
+  /* Default: only the active floor's pins (a single plan can only place its own). */
+  var ff=finds || currentFindings().filter(function(f){ return !f.multiFloor || f.floorId===SITEPLAN.activeFloorId; });
   layoutPins(ff).forEach(function(p){
     var f=p.f, col=COLORS[f.status];
     var d=document.createElement('div');
@@ -3619,9 +3631,23 @@ function cmRoomReport(r,ri){
   if(r.rec && r.rec!=='None required.'){ h+='<div class="miniLbl">Room-specific recommendation</div><p class="ranote" style="margin-bottom:0"'+ce('room:'+ri+':rec')+'>'+r.rec+'</p>'; }
   return h+'</div>';
 }
+/* One plan box per floor, each with its own pin container. idPrefix keeps the
+   ids unique per context (capture vs report). Temporarily swaps SITEPLAN to each
+   floor to render its own plan, then restores the active floor. */
+function spFloorPlanBoxes(idPrefix){
+  spEnsureFloors(); spSaveActiveFloor();
+  var activeId=SITEPLAN.activeFloorId, multi=SITEPLAN.floors.length>1, h='';
+  SITEPLAN.floors.forEach(function(fl){
+    spLoadFloorState(fl.state);
+    h+=(multi?'<div class="miniLbl" style="margin-top:10px">'+spEsc(fl.name)+'</div>':'')+
+       '<div class="planbox" id="'+idPrefix+'_plan_'+fl.id+'">'+planSVG()+'<div id="'+idPrefix+'_'+fl.id+'"></div></div>';
+  });
+  var act=spFloorById(activeId); if(act){ spLoadFloorState(act.state); SITEPLAN.activeFloorId=activeId; }
+  return h;
+}
 function planPanel(){
   if(!planStepOn()) return ''; /* no site plan on this survey, so no inspection map */
-  return '<div class="miniLbl">Inspection map, tap a marker</div><div class="planbox" id="reportPlan">'+planSVG()+'<div id="reportPins"></div></div><div class="hint">Tap a numbered marker to jump to that finding below.</div>';
+  return '<div class="miniLbl">Inspection map, tap a marker</div>'+spFloorPlanBoxes('reportPins')+'<div class="hint">Tap a numbered marker to jump to that finding below.</div>';
 }
 function findingsList(rowLabel){
   return '<div class="miniLbl">'+rowLabel+'</div><div id="reportFindRows"></div>';
@@ -3748,7 +3774,7 @@ function renderReport(){
   var html = surveyType==='timber' ? timberReport() : (surveyType==='damp' ? dampReport() : cmReport());
   document.getElementById('reportMount').innerHTML = siteHeader()+html;
   assignSectionIds();
-  drawPins('reportPins',true);
+  drawFloorPins('reportPins',true);
   renderReportRows();
   calc();
   initSigPad();
